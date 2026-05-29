@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Registro id="" accion="">
+  <Anio>2026</Anio>
+  <ListaZonaGeografica>
+    <ElementoZonaGeografica>
+      <MesActual>5</MesActual>
+      <TipoDependencia>Oficinas Centrales</TipoDependencia>
+      <NombreDependencia>Sede Principal</NombreDependencia>
+      <TipoRiesgoCliente>Moderado</TipoRiesgoCliente>
+      <CantidadClientes>50</CantidadClientes>
+      <TipoRiesgoDependencia>Bajo</TipoRiesgoDependencia>
+    </ElementoZonaGeografica>
+  </ListaZonaGeografica>
+  <ListaTransferenciasRemesas>
+    <ElementoTransferenciasRemesas>
+      <Mes>5</Mes>
+      <TipoMovimiento>1</TipoMovimiento>
+      <TipoEntradaSalidaFondos>1</TipoEntradaSalidaFondos>
+      <MontoTotal>379863.75</MontoTotal>
+      <CodigoPaisISO>CRI</CodigoPaisISO>
+    </ElementoTransferenciasRemesas>
+    <ElementoTransferenciasRemesas>
+      <Mes>5</Mes>
+      <TipoMovimiento>2</TipoMovimiento>
+      <TipoEntradaSalidaFondos>1</TipoEntradaSalidaFondos>
+      <MontoTotal>3018837.59</MontoTotal>
+      <CodigoPaisISO>CRI</CodigoPaisISO>
+    </ElementoTransferenciasRemesas>
+  </ListaTransferenciasRemesas>
+</Registro>
