@@ -18,7 +18,7 @@ const {
     leerTodosProductos, leerTodasTransacciones,
     eliminarClienteSeguro 
 } = require('./crudController');
-const { ejecutarEscenario1, ejecutarEscenario2 } = require('./scenariosController');
+const { ejecutarEscenario1, ejecutarEscenario2, ejecutarEscenario4 } = require('./scenariosController');
  
 const app = express();
 const PORT = 3000;
@@ -100,26 +100,18 @@ app.post('/api/clientes/:idCliente/riesgo-manual', guardarRiesgoManualCliente);
  
 app.post('/api/generar-xml', async (req, res) => {
     try {
-        await XMLModulo.generarXMLSicveca();
-        res.json({ mensaje: 'Archivo Sicveca_Reporte.xml compilado de forma jerarquica.' });
+        const xmlData = await XMLModulo.generarXMLSicveca();
+        res.json({ mensaje: 'Archivo Sicveca_Reporte.xml compilado de forma jerarquica.', xml: xmlData });
     } catch (error) {
         res.status(500).json({ mensaje: error.message });
     }
 });
 
-app.post('/api/escenarios/4', async (req, res) => {
-    try {
-        res.json({ mensaje: 'Escenario 4 de comisiones y divisas ejecutado exitosamente.' });
-    } catch (error) {
-        res.status(500).json({ mensaje: error.message });
-    }
-});
+app.post('/api/escenarios/4', ejecutarEscenario4);
 
-/// --- RUTAS GLOBALES AGREGADAS ---
 app.get('/api/productos', leerTodosProductos);
 app.get('/api/transacciones', leerTodasTransacciones);
 
-// ── Catálogo de tipos de producto ──────────────────────────
 app.get('/api/tipos-productos', async (req, res) => {
     try {
         const pool = await poolPromise;
@@ -161,9 +153,7 @@ app.delete('/api/tipos-productos/:id', async (req, res) => {
         res.json({ mensaje: 'Tipo de producto eliminado.' });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
-// ────────────────────────────────────────────────────────────
 
-// --------------------------------
 app.post('/api/clientes/baja', eliminarClienteSeguro);
 app.get('/api/clientes/:idCliente/productos', leerProductosCliente);
 app.get('/api/productos/:numeroProducto', leerProducto);

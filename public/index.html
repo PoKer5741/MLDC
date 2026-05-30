@@ -168,21 +168,20 @@
 </head>
 <body>
 
-<div class="left-sidebar">
-    <div class="mloc-isotipo"><i class="fas fa-layer-group" style="color:var(--x-primary); margin-right:8px;"></i>MLDC</div>
-    <div class="nav-item active" id="nav-inicio" onclick="switchView('inicio')"><i class="fas fa-home"></i> Inicio (Padrón)</div>
-    <div class="nav-item" id="nav-clientes" onclick="switchView('clientes')"><i class="fas fa-users"></i> Clientes Activos</div>
-    <div class="nav-item" id="nav-expedientes" onclick="switchView('expedientes')"><i class="fas fa-folder-open"></i> Expedientes Abiertos</div>
-    <div class="nav-item" id="nav-productos" onclick="switchView('productos')"><i class="fas fa-wallet"></i> Gestión Productos</div>
-    <div class="nav-item" id="nav-catalogo" onclick="switchView('catalogo')"><i class="fas fa-layer-group"></i> Catálogo de Tipos</div>
-    <div class="nav-item" id="nav-transacciones" onclick="switchView('transacciones')"><i class="fas fa-exchange-alt"></i> Transacciones</div>
-    <div class="nav-item" id="nav-metrics" onclick="switchView('metrics')"><i class="fas fa-tasks"></i> Escenarios Core</div>
-</div>
-
+    <div class="left-sidebar">
+        <div class="mloc-isotipo"><i class="fas fa-layer-group" style="color:var(--x-primary); margin-right:8px;"></i>MLDC</div>
+        <div class="nav-item active" id="nav-inicio" onclick="switchView('inicio')"><i class="fas fa-home"></i> Inicio (Padrón)</div>
+        <div class="nav-item" id="nav-clientes" onclick="switchView('clientes')"><i class="fas fa-users"></i> Clientes Activos</div>
+        <div class="nav-item" id="nav-expedientes" onclick="switchView('expedientes')"><i class="fas fa-folder-open"></i> Expedientes Abiertos</div>
+        <div class="nav-item" id="nav-catalogo" onclick="switchView('catalogo')"><i class="fas fa-layer-group"></i> Catálogo de Tipos</div>
+        <div class="nav-item" id="nav-transacciones" onclick="switchView('transacciones')"><i class="fas fa-exchange-alt"></i> Transacciones</div>
+        <div class="nav-item" id="nav-productos" onclick="switchView('productos')"><i class="fas fa-chart-pie"></i> Análisis</div>
+        <div class="nav-item" id="nav-metrics" onclick="switchView('metrics')"><i class="fas fa-tasks"></i> Escenarios Core</div>
+    </div>
 <div class="center-feed">
     <div class="feed-header">
         <span>MLDC // Grupo 3</span>
-        <span style="font-size: 14px; color: var(--x-text-muted); font-weight: 400;">v2.6.26</span>
+        <span style="font-size: 14px; color: var(--x-text-muted); font-weight: 400;">Hola Rick, Deje de buscar la version</span>
     </div>
 
     <div id="section-inicio" class="view-section active">
@@ -729,6 +728,8 @@
                     <td style="font-family:monospace; color:var(--x-primary); padding:10px 6px;">${p.D_NumeroProducto}</td>
                     
                     <td style="color:var(--success-green); font-weight:500;">${p.NombreProducto}</td>
+                    
+                    <td>${p.NombreCliente || 'No asignado'} <br><span style="font-size:11px;color:var(--x-text-muted);">Céd: ${p.C_IdPersona}</span></td>
                     
                     <td><span style="background-color:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px; font-size:12px;">Tipo XML: ${p.C_TipoProducto}</span></td>
                     
@@ -1485,8 +1486,27 @@
             const infoDiv = document.getElementById('escenario-info');
             let htmlResult = `<div style="margin-bottom:16px; font-weight:700; color:var(--success-green); font-size:16px;"><i class="fas fa-check-circle"></i> ${data.mensaje}</div>`;
 
-            if (escenarioActual === 3 || escenarioActual === 4) {
-                htmlResult += `<div style="color:var(--x-text-main);">El proceso ha concluido en el servidor.</div>`;
+            if (escenarioActual === 3 && data.xml) {
+                // Escapar caracteres para renderizar XML como código
+                const escapedXml = data.xml.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                htmlResult += `<div style="background-color:#0f171f; border:1px solid var(--x-border); border-radius:8px; padding:16px; max-height: 400px; overflow-y: auto;">
+                    <pre style="margin:0;"><code style="color: var(--x-primary); font-family: 'Roboto Mono', monospace; font-size: 13px;">${escapedXml}</code></pre>
+                </div>`;
+            } else if (escenarioActual === 4 && data.resumen && data.resumen.clientes) {
+                data.resumen.clientes.forEach(c => {
+                    htmlResult += `<div style="background-color:var(--x-bg); border:1px solid var(--x-border); border-radius:8px; padding:16px; margin-bottom:12px;">
+                        <div style="color:var(--x-primary); font-weight:700; font-size:15px; margin-bottom:12px;">${c.nombre} (Céd: ${c.cedula})</div>
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:8px;">`;
+                    c.transacciones.forEach(tx => {
+                        const color = tx.estado === 'Aprobada' ? 'var(--success-green)' : 'var(--danger-red)';
+                        htmlResult += `<div style="background-color:var(--x-bg-card); padding:10px; border-radius:6px; font-size:12px;">
+                            <div style="font-weight:700;">${tx.tipo}</div>
+                            <div style="color:var(--x-text-muted);">Producto: ${tx.producto}</div>
+                            <div style="font-weight:700; color:${color};">₡${tx.monto.toLocaleString()} - ${tx.estado}</div>
+                        </div>`;
+                    });
+                    htmlResult += `</div></div>`;
+                });
             } else if (escenarioActual === 1 && data.resumen && data.resumen.clientes) {
                 data.resumen.clientes.forEach(c => {
                     htmlResult += `<div style="background-color:var(--x-bg); border:1px solid var(--x-border); border-radius:8px; padding:16px; margin-bottom:12px;"><div style="color:var(--x-primary); font-weight:700; font-size:15px; margin-bottom:12px;">${c.nombre} (Céd: ${c.cedula})</div>`;

@@ -71,6 +71,9 @@ async function generarXMLSicveca() {
         fs.writeFileSync('Sicveca_Reporte.xml', xmlString, 'utf-8');
         console.log('[XML] Documento "Sicveca_Reporte.xml" procesado y exportado.');
 
+        // Retornamos el XML en formato string para enviarlo al frontend
+        return xmlString;
+
     } catch (err) {
         console.error('[ERROR PROCESO XML]', err.message);
         throw err;
