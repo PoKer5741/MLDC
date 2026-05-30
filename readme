@@ -1,263 +1,34 @@
-/* =========================================================================
-SCRIPTS OBLIGATORIOS PARA LA BASE DE DATOS (EJECUTAR EN SSMS)
-=========================================================================
-COMPAÑEROS: Antes de levantar el servidor con 'node index.js', deben abrir 
-su SQL Server Management Studio, asegurarse de estar parados sobre la base 
-de datos del proyecto (Grupo3_IF51002026) y ejecutar todo este script (F5).
+"""# MLDC - Sistema de Core Bancario y Reportes de Legitimación (SICVECA XML)
 
-Esto creará las funciones de lectura (UDF) y los procedimientos almacenados (SP)
-transaccionales que el sistema de Node.js necesita para el Sprint 2[cite: 3, 29].
-------------------------------------------------------------------------- */
+Este proyecto consiste en un Sistema de Core Bancario diseñado para automatizar operaciones transaccionales, perfiles de riesgo paramétricos y la estructuración jerárquica de reportes normativos en cumplimiento con las directrices de Sicveca para la Legitimación de Capitales (LR). La solución integra una arquitectura backend basada en Node.js, una base de datos relacional en SQL Server mediante procedimientos almacenados, y una interfaz de control centralizada.
 
--- Función para obtener los productos consolidados de un cliente
-CREATE FUNCTION dbo.fn_ObtenerProductosCliente (@C_IdPersona INT)
-RETURNS TABLE
-AS
-RETURN (
-    SELECT D_NumeroProducto, C_TipoProducto, M_Saldo
-    FROM T_Producto
-    WHERE Id_Cliente = @C_IdPersona
-);
-GO
+---
 
--- Función para leer el historial de transacciones de un producto específico
-CREATE FUNCTION dbo.fn_ObtenerTransaccionesProducto (@Id_Producto VARCHAR(50))
-RETURNS TABLE
-AS
-RETURN (
-    SELECT Id_Transaccion, M_Monto, F_FechaTransaccion, C_IdTipoTransaccion
-    FROM T_Transaccion
-    WHERE Id_Producto = @Id_Producto
-);
-GO
+## 1. Arquitectura del Sistema
 
+El sistema implementa una arquitectura desacoplada basada en capas bien definidas para garantizar el mantenimiento, escalabilidad y separación de responsabilidades:
 
--- SP Transaccional para insertar un nuevo producto asociado a un cliente
-CREATE PROCEDURE dbo.sp_InsertarProducto
-    @D_NumeroProducto VARCHAR(50),
-    @Id_Cliente INT,
-    @C_TipoProducto INT,
-    @M_Saldo DECIMAL(18,2)
-AS
-BEGIN
-    SET NOCOUNT ON;
-    BEGIN TRANSACTION;
-    BEGIN TRY
-        INSERT INTO T_Producto (D_NumeroProducto, Id_Cliente, C_TipoProducto, M_Saldo)
-        VALUES (@D_NumeroProducto, @Id_Cliente, @C_TipoProducto, @M_Saldo);
+* **Capa de Presentación (Frontend):** Interfaz SPA (*Single Page Application*) construida en HTML5, CSS3 con variables dinámicas de diseño nocturno y JavaScript asíncrono para la manipulación del DOM y consumo de APIs de forma nativa.
+* **Capa de Aplicación (Backend / API REST):** Servidor HTTP desarrollado con **Node.js** y **Express**, encargado de la orquestación de rutas, parsing de payloads, control de errores y modularización de la lógica del negocio.
+* **Capa de Integración y Servicios:**
+    * `xmlGenerator.js`: Módulo especializado en la construcción del árbol jerárquico XML normativo utilizando `xmlbuilder2`, extrayendo métricas consolidadas directamente del motor relacional.
+    * `buscador.js`: Subsistema de consultas avanzadas que optimiza las búsquedas sobre el padrón electoral e historial crediticio aplicando filtros combinados por divisiones territoriales.
+    * `riesgo.js`: Implementación de lógica transaccional interconectada con SQL Server para el cálculo de matrices de riesgo individuales y masivas.
+* **Capa de Datos:** Persistencia robusta implementada en **SQL Server** utilizando el controlador `mssql/msnodesqlv8` para autenticación integrada de Windows. Toda la lógica transaccional crítica reside en procedimientos almacenados (Stored Procedures) dentro del motor de base de datos.
 
-        COMMIT TRANSACTION;
-    END TRY
-    BEGIN CATCH
-        ROLLBACK TRANSACTION;
-        THROW;
-    END CATCH
-END;
-GO
+---
 
--- SP Transaccional para insertar una transacción y actualizar el saldo de la cuenta de forma automática
-CREATE PROCEDURE dbo.sp_InsertarTransaccion
-    @Id_Producto VARCHAR(50),
-    @M_Monto DECIMAL(18,2),
-    @C_IdTipoTransaccion INT -- 1 = Ingreso, 2 = Egreso
-AS
-BEGIN
-    SET NOCOUNT ON;
-    BEGIN TRANSACTION;
-    BEGIN TRY
-        -- 1. Insertar el registro histórico del movimiento
-        INSERT INTO T_Transaccion (Id_Producto, M_Monto, F_FechaTransaccion, C_IdTipoTransaccion)
-        VALUES (@Id_Producto, @M_Monto, GETDATE(), @C_IdTipoTransaccion);
+## 2. Requisitos del Entorno
 
-        -- 2. Flujo de datos: Afectar el balance actual de la cuenta de forma integrada
-        IF @C_IdTipoTransaccion = 1
-            UPDATE T_Producto SET M_Saldo = M_Saldo + @M_Monto WHERE D_NumeroProducto = @Id_Producto;
-        ELSE
-            UPDATE T_Producto SET M_Saldo = M_Saldo - @M_Monto WHERE D_NumeroProducto = @Id_Producto;
+Para desplegar la aplicación de forma local, es necesario contar con las siguientes herramientas instaladas:
 
-        COMMIT TRANSACTION;
-    END TRY
-    BEGIN CATCH
-        ROLLBACK TRANSACTION;
-        THROW;
-    END CATCH
-END;
-GO
+1.  **Node.js** (Versión LTS recomendada, 18.x o superior)
+2.  **Microsoft SQL Server** (2019 o superior, edición Developer o Express)
+3.  **ODBC Driver 17 for SQL Server** (Requerido por el conector nativo de Windows)
 
-IF OBJECT_ID('dbo.fn_LeerPersona', 'IF') IS NOT NULL
-    DROP FUNCTION dbo.fn_LeerPersona;
-GO
+---
 
-CREATE FUNCTION dbo.fn_LeerPersona (@C_IdPersona INT)
-RETURNS TABLE
-AS
-RETURN (
-    SELECT C_IdPersona, D_Nombre, D_PrimerApellido, C_IdTipoPersona
-    FROM T_Persona
-    WHERE C_IdPersona = @C_IdPersona
-);
-GO
+## 3. Configuración e Instalación
 
-IF OBJECT_ID('dbo.sp_CrearPersona', 'P') IS NOT NULL
-    DROP PROCEDURE dbo.sp_CrearPersona;
-GO
-
-CREATE PROCEDURE dbo.sp_CrearPersona
-    @C_IdPersona INT,
-    @D_Nombre VARCHAR(50),
-    @D_PrimerApellido VARCHAR(50),
-    @C_IdTipoPersona INT
-AS
-BEGIN
-    SET NOCOUNT ON;
-    BEGIN TRANSACTION;
-    BEGIN TRY
-        INSERT INTO T_Persona (C_IdPersona, D_Nombre, D_PrimerApellido, C_IdTipoPersona)
-        VALUES (@C_IdPersona, @D_Nombre, @D_PrimerApellido, @C_IdTipoPersona);
-
-        COMMIT TRANSACTION;
-    END TRY
-    BEGIN CATCH
-        ROLLBACK TRANSACTION;
-        THROW;
-    END CATCH
-END;
-GO
-
-IF OBJECT_ID('dbo.sp_ActualizarPersona', 'P') IS NOT NULL
-    DROP PROCEDURE dbo.sp_ActualizarPersona;
-GO
-
-CREATE PROCEDURE dbo.sp_ActualizarPersona
-    @C_IdPersona INT,
-    @D_Nombre VARCHAR(50),
-    @D_PrimerApellido VARCHAR(50),
-    @C_IdTipoPersona INT
-AS
-BEGIN
-    SET NOCOUNT ON;
-    BEGIN TRANSACTION;
-    BEGIN TRY
-        UPDATE T_Persona 
-        SET D_Nombre = @D_Nombre, 
-            D_PrimerApellido = @D_PrimerApellido, 
-            C_IdTipoPersona = @C_IdTipoPersona
-        WHERE C_IdPersona = @C_IdPersona;
-
-        COMMIT TRANSACTION;
-    END TRY
-    BEGIN CATCH
-        ROLLBACK TRANSACTION;
-        THROW;
-    END CATCH
-END;
-GO
-
-IF OBJECT_ID('dbo.sp_EliminarPersona', 'P') IS NOT NULL
-    DROP PROCEDURE dbo.sp_EliminarPersona;
-GO
-
-CREATE PROCEDURE dbo.sp_EliminarPersona
-    @C_IdPersona INT
-AS
-BEGIN
-    SET NOCOUNT ON;
-    BEGIN TRANSACTION;
-    BEGIN TRY
-        -- Primero eliminamos transacciones y productos asociados por integridad referencial
-        DELETE FROM T_Transaccion WHERE Id_Producto IN (SELECT D_NumeroProducto FROM T_Producto WHERE Id_Cliente = @C_IdPersona);
-        DELETE FROM T_Producto WHERE Id_Cliente = @C_IdPersona;
-        
-        -- Finalmente borramos el cliente
-        DELETE FROM T_Persona WHERE C_IdPersona = @C_IdPersona;
-
-        COMMIT TRANSACTION;
-    END TRY
-    BEGIN CATCH
-        ROLLBACK TRANSACTION;
-        THROW;
-    END CATCH
-END;
-GO
-
-/* =========================================================================
-VERIFICACIÓN: Una vez ejecutado, ya pueden levantar el proyecto web.
-========================================================================= */
-
-
-
-/* =========================================================================
- GUÍA DE INSTALACIÓN EN CONSOLA (CMD) PARA COMPAÑEROS DE GRUPO
-=========================================================================
-
-Para que el proyecto les corra a la primera sin errores de módulos, 
-sigan estos pasos en orden antes de levantar el servidor:
-
-1. Abran la terminal de comandos (CMD) o la consola de VS Code.
-2. Asegúrense de estar parados dentro de la raíz de la carpeta del proyecto 
-   (donde se encuentra el archivo package.json).
-3. Ejecuten el comando principal para instalar las dependencias en limpio:
-
-   npm install
-
--------------------------------------------------------------------------
-     El comando anterior descarga de forma automática todo lo necesario.
-Sin embargo, si por alguna razón les falla un módulo específico, pueden 
-forzar la instalación manual ejecutando los siguientes comandos uno por uno:
-
-• Para el servidor web local y la gestión de rutas:
-  npm install express
-
-• Para conectar a SQL Server usando autenticación integrada de Windows:
-  npm install mssql msnodesqlv8
-
-• Para compilar y estructurar el reporte jerárquico regulado:
-  npm install xmlbuilder2
-
--------------------------------------------------------------------------
-    CÓMO ARRANCAR EL CORE BANCARIO:
-Una vez que termine la instalación, inicien el sistema digitando:
-
-   node index.js
-=========================================================================
-*/
-
-/* =========================================================================
- CÓMO SOLUCIONAR EL ERROR DEL "DRIVER ODBC 17" EN SUS COMPUTADORAS
-=========================================================================
-
-Si al ejecutar 'node index.js' les tira un error de "Driver not found" o 
-"Data source name not found", significa que su Windows no tiene instalado 
-el conector oficial de Microsoft para bases de datos.
-
-Sigan cualquiera de estas dos soluciones para arreglarlo de inmediato:
-
--------------------------------------------------------------------------
- OPCIÓN A: Instalación rápida por comandos (CMD / PowerShell)
--------------------------------------------------------------------------
-Abran una consola de comandos con permisos de Administrador y ejecuten 
-el gestor oficial de paquetes de Windows (Winget) para forzar la descarga:
-
-   winget install Microsoft.ODBCDriverForSQLServer
-
-*(Presionen "Y" o "S" si les pide aceptar los términos de la licencia).*
-
--------------------------------------------------------------------------
- OPCIÓN B: Descarga tradicional desde el Navegador
--------------------------------------------------------------------------
-Si el comando de arriba no les funciona, vayan directo a la página de Microsoft:
-
-1. Entren a: https://learn.microsoft.com/es-es/sql/connect/odbc/download-odbc-driver-for-sql-server
-2. Busquen la sección de "Descargar para Windows".
-3. Denle clic al enlace que dice: "Descargar Microsoft ODBC Driver 17 para SQL Server (x64)".
-4. Abran el archivo msi descargado, denle "Siguiente, Siguiente, Finalizar" y listo.
-
--------------------------------------------------------------------------
- NOTA DE CONEXIÓN INTERNA (Si usan el Driver 18):
-Si ya tienen instalado el "ODBC Driver 18" por proyectos anteriores y no quieren 
-bajar el 17, abran el archivo 'db.js' y cambien el texto de la conexión:
-
-Donde dice:  Driver={ODBC Driver 17 for SQL Server}
-Pongan:      Driver={ODBC Driver 18 for SQL Server}
-=========================================================================
-*/
+### Paso 1: Clonar e inicializar el directorio del backend
+Acceda al directorio raíz del proyecto mediante la terminal y ejecute el aprovisionamiento de dependencias del entorno de Node.js:
