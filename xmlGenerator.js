@@ -1,60 +1,34 @@
 const { create } = require('xmlbuilder2');
 const fs = require('fs');
-const { sql, poolPromise } = require('./db');
-
-function validarDatosXML(datosValidar) {
-    const errores = [];
-
-    if (!datosValidar.anio || datosValidar.anio < 2014) {
-        errores.push(`Anio invalido: ${datosValidar.anio}. Debe ser mayor a 2013.`);
-    }
-
-    if (!datosValidar.mesActual || datosValidar.mesActual < 1 || datosValidar.mesActual > 12) {
-        errores.push(`Mes invalido: ${datosValidar.mesActual}. Debe estar entre 1 y 12.`);
-    }
-
-    if (datosValidar.totalClientes < 0) {
-        errores.push(`Cantidad de clientes invalida: ${datosValidar.totalClientes}. No puede ser un valor negativo.`);
-    }
-
-    datosValidar.transferencias.forEach((movimiento) => {
-        if (movimiento.MontoTotal < 0) {
-            errores.push(`Monto invalido en producto tipo ${movimiento.C_TipoProducto}: ${movimiento.MontoTotal}. Los montos no pueden ser negativos.`);
-        }
-    });
-
-    return errores;
-}
+const { poolPromise, sql } = require('./db');
 
 async function generarXMLSicveca() {
     const pool = await poolPromise;
 
     try {
-        console.log('[XML] Consultando datos mediante procedimientos almacenados...');
+        console.log('[XML] Solicitando validacion e informacion al motor de base de datos...');
         
-        const fechaActual = new Date();
-        const anio = fechaActual.getFullYear();
-        const mesActual = fechaActual.getMonth() + 1;
+        // 1. Obtener parámetros dinámicos institucionales de la base de datos
+        const pDependencia = await pool.request().input('Id_Parametro', sql.VarChar(50), 'XML_TIPO_DEPENDENCIA').execute('dbo.sp_ObtenerParametro');
+        const pNombre = await pool.request().input('Id_Parametro', sql.VarChar(50), 'XML_NOMBRE_DEPENDENCIA').execute('dbo.sp_ObtenerParametro');
+        const pRiesgo = await pool.request().input('Id_Parametro', sql.VarChar(50), 'XML_RIESGO_DEPENDENCIA').execute('dbo.sp_ObtenerParametro');
+        const pPais = await pool.request().input('Id_Parametro', sql.VarChar(50), 'XML_PAIS_ISO').execute('dbo.sp_ObtenerParametro');
 
-        const resultZonas = await pool.request().execute('dbo.sp_ObtenerTotalClientesXML');
-        const totalClientes = resultZonas.recordset[0].CantidadClientes || 0;
+        const tipoDependencia = pDependencia.recordset[0].Valor_Texto;
+        const nombreDependencia = pNombre.recordset[0].Valor_Texto;
+        const riesgoDependencia = pRiesgo.recordset[0].Valor_Texto;
+        const codigoPais = pPais.recordset[0].Valor_Texto;
 
-        const resultTransferencias = await pool.request().execute('dbo.sp_ObtenerTotalesTransferenciasRemesasXML');
+        const result = await pool.request().execute('dbo.sp_ObtenerDatosXML_Sicveca');
 
-        const datosExtraidos = {
-            anio: anio,
-            mesActual: mesActual,
-            totalClientes: totalClientes,
-            transferencias: resultTransferencias.recordset
-        };
+        const cabecera = result.recordsets[0][0];
+        const transferencias = result.recordsets[1];
 
-        const erroresValidacion = validarDatosXML(datosExtraidos);
-
-        if (erroresValidacion.length > 0) {
-            console.error('[ERROR DE VALIDACION] Los datos no cumplen con los requisitos estructurales:');
-            erroresValidacion.forEach(err => console.error(`- ${err}`));
-            throw new Error(`Validacion fallida. No es posible generar el documento XML.`);
-        }
+        const anio = cabecera.Anio;
+        const mesActual = cabecera.MesActual;
+        const totalClientes = cabecera.TotalClientes;
+        // Si el SP Sicveca retorna el riesgo del cliente, utilízalo. Si no, usa el valor por defecto provisto por la BD.
+        const riesgoClienteXML = cabecera.TipoRiesgoCliente || 'Moderado'; 
 
         const root = create({ version: '1.0', encoding: 'UTF-8' })
             .ele('Registro', { id: '', accion: '' });
@@ -65,16 +39,16 @@ async function generarXMLSicveca() {
         const elementoZona = listaZonas.ele('ElementoZonaGeografica');
         
         elementoZona.ele('MesActual').txt(mesActual.toString());
-        elementoZona.ele('TipoDependencia').txt('Oficinas Centrales'); 
-        elementoZona.ele('NombreDependencia').txt('Sede Principal'); 
-        elementoZona.ele('TipoRiesgoCliente').txt('Moderado'); 
+        elementoZona.ele('TipoDependencia').txt(tipoDependencia); 
+        elementoZona.ele('NombreDependencia').txt(nombreDependencia); 
+        elementoZona.ele('TipoRiesgoCliente').txt(riesgoClienteXML); 
         elementoZona.ele('CantidadClientes').txt(totalClientes.toString());
-        elementoZona.ele('TipoRiesgoDependencia').txt('Bajo');
+        elementoZona.ele('TipoRiesgoDependencia').txt(riesgoDependencia);
 
         const listaTransferencias = root.ele('ListaTransferenciasRemesas');
 
-        if (resultTransferencias.recordset.length > 0) {
-            for (const row of resultTransferencias.recordset) {
+        if (transferencias && transferencias.length > 0) {
+            for (const row of transferencias) {
                 const tipoMovimiento = row.C_TipoProducto === 13 ? '1' : '2'; 
                 
                 const elementoTransferencia = listaTransferencias.ele('ElementoTransferenciasRemesas');
@@ -82,7 +56,7 @@ async function generarXMLSicveca() {
                 elementoTransferencia.ele('TipoMovimiento').txt(tipoMovimiento);
                 elementoTransferencia.ele('TipoEntradaSalidaFondos').txt('1'); 
                 elementoTransferencia.ele('MontoTotal').txt(row.MontoTotal ? row.MontoTotal.toFixed(2) : '0.00');
-                elementoTransferencia.ele('CodigoPaisISO').txt('CRI'); 
+                elementoTransferencia.ele('CodigoPaisISO').txt(codigoPais); 
             }
         } else {
             const elementoTransferencia = listaTransferencias.ele('ElementoTransferenciasRemesas');
@@ -90,12 +64,12 @@ async function generarXMLSicveca() {
             elementoTransferencia.ele('TipoMovimiento').txt('1');
             elementoTransferencia.ele('TipoEntradaSalidaFondos').txt('1');
             elementoTransferencia.ele('MontoTotal').txt('0.00');
-            elementoTransferencia.ele('CodigoPaisISO').txt('CRI');
+            elementoTransferencia.ele('CodigoPaisISO').txt(codigoPais);
         }
 
         const xmlString = root.end({ prettyPrint: true });
         fs.writeFileSync('Sicveca_Reporte.xml', xmlString, 'utf-8');
-        console.log('[XML] Documento "Sicveca_Reporte.xml" exportado exitosamente.');
+        console.log('[XML] Documento "Sicveca_Reporte.xml" procesado y exportado.');
 
     } catch (err) {
         console.error('[ERROR PROCESO XML]', err.message);

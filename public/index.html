@@ -71,9 +71,6 @@
         .nav-item i { font-size: 22px; width: 24px; text-align: center; }
         .nav-item.active { font-weight: 700; color: var(--x-primary); background-color: rgba(29, 155, 240, 0.05); }
 
-        .action-button-container { margin-top: auto; display: flex; flex-direction: column; width: 100%; gap: 8px; }
-        .button-label { font-size: 11px; color: var(--x-text-muted); font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; text-align: center; }
-
         .btn-post-minimal {
             background-color: var(--x-primary);
             color: #ffffff;
@@ -84,19 +81,20 @@
             cursor: pointer;
             width: 100%;
             transition: background 0.2s;
-            font-size: 18px;
+            font-size: 16px;
             display: flex;
             justify-content: center;
             align-items: center;
         }
         .btn-post-minimal:hover { background-color: #1a8cd8; }
+        .btn-post-minimal:disabled { background-color: #555; cursor: not-allowed; }
 
         .center-feed { flex-grow: 1; box-sizing: border-box; }
         .feed-header { padding: 16px; font-weight: 700; font-size: 22px; position: sticky; top: 0; background-color: rgba(21, 32, 43, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--x-border); z-index: 10; display: flex; justify-content: space-between; align-items: center; }
 
         .view-section { display: none; padding: 24px; animation: fadeIn 0.2s ease-in-out; }
         .view-section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @animations fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         .search-container { position: relative; margin-bottom: 24px; }
         .search-wrapper-x { display: flex; align-items: center; background-color: var(--x-bg-card); border-radius: 9999px; padding: 12px 20px; gap: 14px; border: 1px solid transparent; }
@@ -131,16 +129,14 @@
         .form-grid-x { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px; text-align: left; }
         .form-field-x { display: flex; flex-direction: column; gap: 6px; }
         .form-field-x label { font-size: 13px; color: var(--x-text-muted); font-weight: 500; }
-        .crud-input-style { background-color: var(--x-bg); border: 1px solid var(--x-border); color: var(--x-text-main); border-radius: 8px; padding: 10px 14px; font-size: 15px; transition: border-color 0.2s; }
+        .crud-input-style { background-color: var(--x-bg); border: 1px solid var(--x-border); color: var(--x-text-main); border-radius: 8px; padding: 10px 14px; font-size: 15px; transition: border-color 0.2s; box-sizing: border-box; width: 100%; }
         .crud-input-style:focus { outline: none; border-color: var(--x-primary); }
-        .crud-input-style:disabled { background-color: rgba(255,255,255,0.05); color: #8899a6; border-color: transparent; cursor: not-allowed; }
+        .crud-input-style:disabled { background-color: rgba(255,255,255,0.03); color: #8899a6; border-color: transparent; cursor: not-allowed; }
 
         .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 24px; }
         .metric-block { background-color: var(--x-bg-card); border: 1px solid var(--x-border); border-radius: 12px; padding: 20px; text-align: center; }
         .metric-block h4 { margin: 0 0 10px 0; color: var(--x-text-muted); font-size: 14px; text-transform: uppercase; }
         .metric-block .value { font-size: 28px; font-weight: 700; color: var(--x-primary); font-family: monospace; }
-
-        .g-console-x { background-color: #0f171f; color: var(--x-primary); font-family: 'Roboto Mono', monospace; font-size: 13px; padding: 16px; border-radius: 12px; border: 1px solid var(--x-border); margin-top: 20px; white-space: pre-wrap; max-height: 250px; overflow-y: auto; }
 
         .x-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--x-modal-overlay); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
         .x-modal-overlay.open { opacity: 1; pointer-events: auto; }
@@ -158,6 +154,8 @@
         .btn-action-icon:hover { color: var(--danger-red); }
 
         .riesgo-grid-row { display:flex; justify-content:space-between; align-items: center; border-bottom:1px solid var(--x-border); padding: 8px 0; font-size: 13px; }
+        .riesgo-input { background: rgba(0,0,0,0.3); border: 1px solid var(--x-border); color: var(--x-primary); border-radius: 4px; padding: 6px; width: 60px; text-align: right; font-weight: bold; font-family: monospace; transition: border-color 0.2s, background 0.2s; }
+        .riesgo-input:focus { outline: none; border-color: var(--x-primary); background: rgba(29, 155, 240, 0.1); }
 
         .escenario-box { background-color: var(--x-bg-card); border: 1px solid var(--x-border); border-radius: 12px; padding: 20px; margin-top: 20px; display: none; }
         .escenario-info { color: var(--x-text-main); font-size: 14px; margin-bottom: 20px; line-height: 1.6; background-color: rgba(29, 155, 240, 0.05); padding: 16px; border-radius: 8px; border-left: 4px solid var(--x-primary); }
@@ -165,10 +163,6 @@
         .escenario-actions { display: flex; justify-content: flex-end; border-top: 1px solid var(--x-border); padding-top: 16px; }
         
         .feed-title { margin-top: 10px; margin-bottom: 16px; border-bottom: 1px solid var(--x-border); padding-bottom: 10px; font-size: 18px; font-weight: 700; color: var(--x-primary); }
-        
-        .riesgo-input { background: rgba(0,0,0,0.3); border: 1px solid var(--x-border); color: var(--x-primary); border-radius: 4px; padding: 6px; width: 60px; text-align: right; font-weight: bold; font-family: monospace; transition: border-color 0.2s, background 0.2s; }
-        .riesgo-input:focus { outline: none; border-color: var(--x-primary); background: rgba(29, 155, 240, 0.1); }
-        
         .frequent-badge { font-size: 11px; background-color: var(--warning-yellow); color: #000; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-left: 8px; }
     </style>
 </head>
@@ -178,14 +172,11 @@
     <div class="mloc-isotipo"><i class="fas fa-layer-group" style="color:var(--x-primary); margin-right:8px;"></i>MLDC</div>
     <div class="nav-item active" id="nav-inicio" onclick="switchView('inicio')"><i class="fas fa-home"></i> Inicio (Padrón)</div>
     <div class="nav-item" id="nav-clientes" onclick="switchView('clientes')"><i class="fas fa-users"></i> Clientes Activos</div>
-    <div class="nav-item" id="nav-metrics" onclick="switchView('metrics')"><i class="fas fa-tasks"></i> Escenarios Core</div>
     <div class="nav-item" id="nav-expedientes" onclick="switchView('expedientes')"><i class="fas fa-folder-open"></i> Expedientes Abiertos</div>
-    <div class="nav-item" id="nav-agregar-persona" onclick="abrirModalAgregarPersona()"><i class="fas fa-user-plus"></i> Agregar Persona</div>
-    
-    <div class="action-button-container">
-        <span class="button-label">Generar Reporte XML</span>
-        <button class="btn-post-minimal" onclick="generarXML()"><i class="fas fa-plus"></i></button>
-    </div>
+    <div class="nav-item" id="nav-productos" onclick="switchView('productos')"><i class="fas fa-wallet"></i> Gestión Productos</div>
+    <div class="nav-item" id="nav-catalogo" onclick="switchView('catalogo')"><i class="fas fa-layer-group"></i> Catálogo de Tipos</div>
+    <div class="nav-item" id="nav-transacciones" onclick="switchView('transacciones')"><i class="fas fa-exchange-alt"></i> Transacciones</div>
+    <div class="nav-item" id="nav-metrics" onclick="switchView('metrics')"><i class="fas fa-tasks"></i> Escenarios Core</div>
 </div>
 
 <div class="center-feed">
@@ -202,22 +193,24 @@
                 <button class="btn-buscar-x" onclick="buscarClienteTradicional()">Buscar</button>
             </div>
             
-            <div id="geo-filters-container" style="display: flex; gap: 10px; margin: 15px 0 0 15px; align-items: center; flex-wrap: wrap;">
-                <select id="select-provincia" class="crud-input-style" style="padding: 8px 12px; font-size: 14px; min-width: 140px;" onchange="manejarCambioProvincia()">
-                    <option value="">Provincia</option>
-                </select>
-                <select id="select-canton" class="crud-input-style" style="padding: 8px 12px; font-size: 14px; min-width: 140px;" onchange="manejarCambioCanton()">
-                    <option value="">Cantón</option>
-                </select>
-                <select id="select-distrito" class="crud-input-style" style="padding: 8px 12px; font-size: 14px; min-width: 140px;" onchange="buscarClienteTradicional()">
-                    <option value="">Distrito</option>
-                </select>
+            <div id="geo-filters-container" style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                    <select id="select-provincia" class="crud-input-style" style="width: 100%; padding: 12px;" onchange="manejarCambioProvincia()">
+                        <option value="">Provincia</option>
+                    </select>
+                    <select id="select-canton" class="crud-input-style" style="width: 100%; padding: 12px;" onchange="manejarCambioCanton()">
+                        <option value="">Cantón</option>
+                    </select>
+                    <select id="select-distrito" class="crud-input-style" style="width: 100%; padding: 12px;" onchange="buscarClienteTradicional()">
+                        <option value="">Distrito</option>
+                    </select>
+                </div>
 
-                <div style="display: flex; gap: 8px; margin-left: auto;">
-                    <button class="btn-buscar-x" style="background-color: #117d3b; padding: 8px 16px; border-radius: 8px;" onclick="buscarClienteTradicional()">
+                <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                    <button class="btn-buscar-x" style="background-color: #117d3b; padding: 10px 20px; border-radius: 8px;" onclick="buscarClienteTradicional()">
                         <i class="fas fa-filter" style="margin-right: 5px;"></i> Filtrar
                     </button>
-                    <button class="btn-buscar-x" style="background-color: var(--danger-red); padding: 8px 16px; border-radius: 8px;" onclick="limpiarFiltrosGeo()">
+                    <button class="btn-buscar-x" style="background-color: var(--danger-red); padding: 10px 20px; border-radius: 8px;" onclick="limpiarFiltrosGeo()">
                         <i class="fas fa-eraser" style="margin-right: 5px;"></i> Limpiar
                     </button>
                 </div>
@@ -238,18 +231,42 @@
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--x-border); padding-bottom: 16px; margin-bottom: 20px;">
             <div>
                 <h3 style="margin:0 0 5px 0;">Directorio de Clientes Activos</h3>
-                <span style="color:var(--x-text-muted); font-size:14px;">Totalidad de perfiles registrados en el Core Bancario.</span>
             </div>
-            <button class="btn-buscar-x" style="background-color: var(--success-green); color: #fff; font-weight:700; padding: 10px 16px;" onclick="abrirModalAgregarPersona()">
-                <i class="fas fa-user-plus" style="margin-right:5px;"></i> Agregar Cliente
+            <div style="display:flex; gap:10px;">
+                <button class="btn-buscar-x" style="background-color: var(--danger-red); padding: 10px 16px;" onclick="abrirModalBajaCliente()">
+                    <i class="fas fa-user-minus" style="margin-right:5px;"></i> Dar de Baja
+                </button>
+                <button class="btn-buscar-x" style="background-color: var(--success-green); padding: 10px 16px;" onclick="abrirModalAgregarPersona()">
+                    <i class="fas fa-user-plus" style="margin-right:5px;"></i> Agregar Cliente
+                </button>
+            </div>
+        </div>
+        <div id="feed-clientes-activos"></div>
+    </div>
+
+    <div id="section-transacciones" class="view-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--x-border); padding-bottom: 16px; margin-bottom: 20px;">
+            <div>
+                <h3 style="margin:0 0 5px 0;">Auditoría de Transacciones</h3>
+            </div>
+            <button class="btn-buscar-x" style="background-color: var(--success-green); padding: 10px 16px;" onclick="abrirModalTransaccionGlobal()">
+                <i class="fas fa-plus" style="margin-right:5px;"></i> Registrar Transacción
             </button>
         </div>
-        
-        <div id="feed-clientes-activos">
-            <div style="text-align:center; padding:40px; color:var(--x-text-muted);">
-                <i class="fas fa-circle-notch fa-spin" style="font-size:32px; margin-bottom:12px; display:block;"></i>
-                Cargando directorio...
-            </div>
+        <div style="background-color:var(--x-bg-card); border-radius:12px; border:1px solid var(--x-border); padding:16px; overflow-x:auto;">
+            <table class="product-sub-table" style="width:100%;">
+                <thead>
+                    <tr style="text-align:left;">
+                        <th>ID Tx</th>
+                        <th>N° Producto</th>
+                        <th>Nombre Titular</th>
+                        <th>Sentido</th>
+                        <th>Monto (₡)</th>
+                        <th style="text-align:right;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-global-transacciones-body"></tbody>
+            </table>
         </div>
     </div>
 
@@ -257,12 +274,18 @@
         <h3 style="margin-top:0;">Laboratorio de Escenarios</h3>
         <p style="color:var(--x-text-muted); font-size:14px; margin-bottom:20px;">Ejecución de escenarios de automatización:</p>
         
-        <div style="display:flex; gap:16px; margin-bottom:24px;">
+        <div style="display:flex; gap:16px; margin-bottom:24px; flex-wrap: wrap;">
             <button class="btn-post-minimal" style="width:auto; padding:12px 20px; background-color:#1a73e8;" onclick="seleccionarEscenario(1)">
                 <i class="fas fa-database" style="margin-right:8px;"></i> Escenario 1
             </button>
             <button class="btn-post-minimal" style="width:auto; padding:12px 20px; background-color:#117d3b;" onclick="seleccionarEscenario(2)">
                 <i class="fas fa-shopping-cart" style="margin-right:8px;"></i> Escenario 2
+            </button>
+            <button class="btn-post-minimal" style="width:auto; padding:12px 20px; background-color:#f59e0b;" onclick="seleccionarEscenario(3)">
+                <i class="fas fa-file-code" style="margin-right:8px;"></i> Escenario 3 (XML)
+            </button>
+            <button class="btn-post-minimal" style="width:auto; padding:12px 20px; background-color:#8b5cf6;" onclick="seleccionarEscenario(4)">
+                <i class="fas fa-chart-line" style="margin-right:8px;"></i> Escenario 4 (Divisas)
             </button>
         </div>
 
@@ -301,10 +324,226 @@
             <div style="color:var(--x-text-muted); font-style:italic;">No se registran consultas previas en esta sesión.</div>
         </div>
     </div>
-</div>
+
+    <div id="section-productos" class="view-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--x-border); padding-bottom: 16px; margin-bottom: 20px;">
+            <div>
+                <h3 style="margin:0 0 5px 0;">Administración Global de Productos</h3>
+            </div>
+            <button class="btn-buscar-x" style="background-color: var(--success-green); padding: 10px 16px;" onclick="abrirModalProductoGlobal()">
+                <i class="fas fa-plus" style="margin-right:5px;"></i> Agregar Producto
+            </button>
+        </div>
+
+        <div style="background-color:var(--x-bg-card); border-radius:12px; border:1px solid var(--x-border); padding:16px; overflow-x:auto;">
+            <table class="product-sub-table" style="width:100%;">
+                <thead>
+                    <tr style="text-align:left;">
+                        <th>N° Producto</th>
+                        <th>Nombre de Producto</th> <th>Tipo XML</th>
+                        <th style="text-align:right;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-global-productos-body">
+                    <tr><td colspan="4" style="text-align:center;">Cargando catálogo...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- CATÁLOGO DE TIPOS DE PRODUCTO                         -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <div id="section-catalogo" class="view-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--x-border); padding-bottom: 16px; margin-bottom: 20px;">
+            <div>
+                <h3 style="margin:0 0 5px 0;">Catálogo de Tipos de Producto</h3>
+                <span style="font-size:13px; color:var(--x-text-muted);">Tipos disponibles para el XML SICVECA</span>
+            </div>
+            <button class="btn-buscar-x" style="background-color: var(--success-green); padding: 10px 16px;" onclick="abrirModalCatalogo()">
+                <i class="fas fa-plus" style="margin-right:5px;"></i> Agregar Tipo
+            </button>
+        </div>
+
+        <div style="background-color:var(--x-bg-card); border-radius:12px; border:1px solid var(--x-border); padding:16px; overflow-x:auto;">
+            <table class="product-sub-table" style="width:100%;">
+                <thead>
+                    <tr style="text-align:left;">
+                        <th style="width:90px;">Tipo XML</th>
+                        <th>Nombre del Tipo</th>
+                        <th style="text-align:right;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-catalogo-body">
+                    <tr><td colspan="3" style="text-align:center;">Cargando...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Catálogo -->
+    <div id="modal-catalogo" class="x-modal-overlay" onclick="cerrarModalCatalogo()">
+        <div class="x-modal" onclick="event.stopPropagation()" style="max-width:440px;">
+            <div class="x-modal-header">
+                <h4 id="modal-catalogo-title">Agregar Tipo de Producto</h4>
+                <button class="btn-close-modal" onclick="cerrarModalCatalogo()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="form-grid-x">
+                <input type="hidden" id="cat-modo">
+                <div class="form-field-x">
+                    <label>Tipo XML (ID numérico)</label>
+                    <input type="number" id="cat-id" class="crud-input-style" placeholder="Ej: 14">
+                </div>
+                <div class="form-field-x">
+                    <label>Nombre del Tipo</label>
+                    <input type="text" id="cat-nombre" class="crud-input-style" placeholder="Ej: Remesas de dinero">
+                </div>
+            </div>
+            <button class="btn-buscar-x" style="background-color:var(--success-green); width:100%; padding:12px; margin-top:15px;" onclick="guardarCatalogo()">
+                <i class="fas fa-save" style="margin-right:6px;"></i> Guardar
+            </button>
+        </div>
+    </div>
+
+    <div id="section-transacciones" class="view-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--x-border); padding-bottom: 16px; margin-bottom: 20px;">
+            <div>
+                <h3 style="margin:0 0 5px 0;">Auditoría de Transacciones</h3>
+            </div>
+            <button class="btn-buscar-x" style="background-color: var(--success-green); padding: 10px 16px;" onclick="abrirModalTransaccionGlobal()">
+                <i class="fas fa-plus" style="margin-right:5px;"></i> Registrar Transacción
+            </button>
+        </div>
+
+        <div style="background-color:var(--x-bg-card); border-radius:12px; border:1px solid var(--x-border); padding:16px; overflow-x:auto;">
+            <table class="product-sub-table" style="width:100%;">
+                <thead>
+                    <tr style="text-align:left;">
+                        <th>ID Tx</th>
+                        <th>N° Producto</th>
+                        <th>Nombre Titular</th>
+                        <th>Sentido</th>
+                        <th>Monto (₡)</th>
+                        <th style="text-align:right;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-global-transacciones-body">
+                    <tr><td colspan="6" style="text-align:center;">Cargando historial...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal-baja-producto" class="x-modal-overlay" onclick="cerrarModalBajaProducto()">
+        <div class="x-modal" onclick="event.stopPropagation()" style="max-width: 500px;">
+            <div class="x-modal-header">
+                <h4 style="margin:0; color:var(--danger-red);">Dar de Baja Producto</h4>
+                <button class="btn-close-modal" onclick="cerrarModalBajaProducto()"><i class="fas fa-times"></i></button>
+            </div>
+            <div style="padding: 10px 0;">
+                <div style="background-color:rgba(224, 36, 94, 0.1); border-left:4px solid var(--danger-red); padding:10px; margin-bottom:15px; font-size:13px;">
+                    <i class="fas fa-exclamation-triangle" style="color:var(--danger-red); margin-right:5px;"></i>
+                    <strong>Atención:</strong> Esta acción eliminará el instrumento financiero y las transacciones ligadas a este de la base de datos de forma irreversible.
+                </div>
+                <div class="form-grid-x">
+                    <div class="form-field-x">
+                        <label>N° Producto a Eliminar</label>
+                        <input type="text" id="baja-prod-id" class="crud-input-style" readonly style="color:var(--danger-red); font-weight:bold;">
+                    </div>
+                </div>
+                <button class="btn-buscar-x" style="background-color:var(--danger-red); width:100%; padding:12px; font-weight:700; margin-top:10px;" onclick="apiDarDeBajaProducto()">
+                    Confirmar Baja de Producto
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-baja-transaccion" class="x-modal-overlay" onclick="cerrarModalBajaTransaccion()">
+        <div class="x-modal" onclick="event.stopPropagation()" style="max-width: 500px;">
+            <div class="x-modal-header">
+                <h4 style="margin:0; color:var(--danger-red);">Revertir Transacción</h4>
+                <button class="btn-close-modal" onclick="cerrarModalBajaTransaccion()"><i class="fas fa-times"></i></button>
+            </div>
+            <div style="padding: 10px 0;">
+                <div style="background-color:rgba(224, 36, 94, 0.1); border-left:4px solid var(--danger-red); padding:10px; margin-bottom:15px; font-size:13px;">
+                    <i class="fas fa-exclamation-triangle" style="color:var(--danger-red); margin-right:5px;"></i>
+                    <strong>Atención:</strong> Estás a punto de anular y eliminar un asiento transaccional del Core.
+                </div>
+                <div class="form-grid-x">
+                    <div class="form-field-x">
+                        <label>ID de Transacción</label>
+                        <input type="number" id="baja-trx-id" class="crud-input-style" readonly style="color:var(--danger-red); font-weight:bold;">
+                    </div>
+                </div>
+                <button class="btn-buscar-x" style="background-color:var(--danger-red); width:100%; padding:12px; font-weight:700; margin-top:10px;" onclick="apiDarDeBajaTransaccion()">
+                    Confirmar Reversión
+                </button>
+            </div>
+        </div>
+    </div>
+    <div id="modal-producto-global" class="x-modal-overlay" onclick="cerrarModalProductoGlobal()">
+        <div class="x-modal" onclick="event.stopPropagation()" style="max-width: 500px;">
+            <div class="x-modal-header">
+                <h4 id="modal-prod-title">Gestión de Producto</h4>
+                <button class="btn-close-modal" onclick="cerrarModalProductoGlobal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="form-grid-x">
+                <input type="hidden" id="prod-global-modo">
+                <div class="form-field-x">
+                    <label>N° Producto</label>
+                    <input type="text" id="prod-global-id" class="crud-input-style" placeholder="Ej: PRD-1234">
+                </div>
+                <div class="form-field-x">
+                    <label>Cédula Cliente (Dueño)</label>
+                    <input type="number" id="prod-global-cliente" class="crud-input-style" placeholder="Ej: 118440231">
+                </div>
+                <div class="form-field-x">
+                    <label>Tipo (Ej: 1=A la vista)</label>
+                    <input type="number" id="prod-global-tipo" class="crud-input-style">
+                </div>
+                <div class="form-field-x">
+                    <label>Saldo (₡)</label>
+                    <input type="number" id="prod-global-saldo" class="crud-input-style" step="0.01">
+                </div>
+            </div>
+            <button class="btn-buscar-x" style="background-color:var(--success-green); width:100%; padding:12px; margin-top:15px;" onclick="guardarProductoGlobal()">Guardar Producto</button>
+        </div>
+    </div>
+
+    <div id="modal-transaccion-global" class="x-modal-overlay" onclick="cerrarModalTransaccionGlobal()">
+        <div class="x-modal" onclick="event.stopPropagation()" style="max-width: 500px;">
+            <div class="x-modal-header">
+                <h4 id="modal-trx-title">Registrar Transacción</h4>
+                <button class="btn-close-modal" onclick="cerrarModalTransaccionGlobal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="form-grid-x">
+                <input type="hidden" id="trx-global-modo">
+                <div class="form-field-x" id="div-trx-id" style="display:none;">
+                    <label>ID Tx (Solo lectura)</label>
+                    <input type="number" id="trx-global-id" class="crud-input-style" disabled>
+                </div>
+                <div class="form-field-x">
+                    <label>N° Producto Afectado</label>
+                    <input type="text" id="trx-global-prod" class="crud-input-style" placeholder="Ej: PRD-1234">
+                </div>
+                <div class="form-field-x">
+                    <label>Sentido Movimiento</label>
+                    <select id="trx-global-tipo" class="crud-input-style">
+                        <option value="1">Ingreso (+)</option>
+                        <option value="2">Egreso (-)</option>
+                    </select>
+                </div>
+                <div class="form-field-x">
+                    <label>Monto a procesar (₡)</label>
+                    <input type="number" id="trx-global-monto" class="crud-input-style" step="0.01">
+                </div>
+            </div>
+            <button class="btn-buscar-x" style="background-color:var(--success-green); width:100%; padding:12px; margin-top:15px;" onclick="guardarTransaccionGlobal()">Procesar Transacción</button>
+        </div>
+    </div>
 
 <div id="modal-agregar-persona" class="x-modal-overlay" onclick="cerrarModalAgregarPersona()">
-    <div class="x-modal" onclick="event.stopPropagation()">
+    <div class="x-modal" onclick="event.stopPropagation()" style="max-width: 500px;">
         <div class="x-modal-header">
             <h4 style="margin:0; color:var(--x-primary);">Registrar Persona en el Core</h4>
             <button class="btn-close-modal" onclick="cerrarModalAgregarPersona()"><i class="fas fa-times"></i></button>
@@ -337,7 +576,37 @@
         </div>
     </div>
 </div>
-
+<div id="modal-baja-cliente" class="x-modal-overlay" onclick="cerrarModalBajaCliente()">
+    <div class="x-modal" onclick="event.stopPropagation()" style="max-width: 500px;">
+        <div class="x-modal-header">
+            <h4 style="margin:0; color:var(--danger-red);">Dar de Baja Cliente</h4>
+            <button class="btn-close-modal" onclick="cerrarModalBajaCliente()"><i class="fas fa-times"></i></button>
+        </div>
+        <div style="padding: 10px 0;">
+            <div style="background-color:rgba(224, 36, 94, 0.1); border-left:4px solid var(--danger-red); padding:10px; margin-bottom:15px; font-size:13px;">
+                <i class="fas fa-exclamation-triangle" style="color:var(--danger-red); margin-right:5px;"></i>
+                <strong>Atención:</strong> Esta acción eliminará los productos y transacciones del cliente en el Core Bancario. Su registro <strong>permanecerá en el Padrón Electoral</strong>.
+            </div>
+            <div class="form-grid-x">
+                <div class="form-field-x">
+                    <label>Cédula del Cliente *</label>
+                    <input type="number" id="baja-id" class="crud-input-style" placeholder="Cédula exacta">
+                </div>
+                <div class="form-field-x">
+                    <label>Nombre de Validación *</label>
+                    <input type="text" id="baja-name" class="crud-input-style" placeholder="Nombre completo">
+                </div>
+                <div class="form-field-x" style="grid-column: span 2;">
+                    <label>Motivo de la Baja *</label>
+                    <input type="text" id="baja-motivo" class="crud-input-style" placeholder="Ej: Cierre de cuentas, fallecimiento...">
+                </div>
+            </div>
+            <button class="btn-buscar-x" style="background-color:var(--danger-red); width:100%; padding:12px; font-weight:700; margin-top:10px;" onclick="apiDarDeBajaCliente()">
+                Confirmar Baja Definitiva
+            </button>
+        </div>
+    </div>
+</div>
 <div id="modal-expediente" class="x-modal-overlay" onclick="forceCerrarModal()">
     <div class="x-modal" onclick="event.stopPropagation()">
         <div class="x-modal-header">
@@ -355,7 +624,6 @@
     let debounceTimer;
     let escenarioActual = null;
 
-    // --- SISTEMA DE VISITAS (EN BASE DE DATOS) ---
     async function registrarVisitaCliente(cedula) {
         if(!cedula) return;
         try {
@@ -374,12 +642,342 @@
         document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
         document.getElementById(`section-${viewName}`).classList.add('active');
         document.getElementById(`nav-${viewName}`).classList.add('active');
+        
         if (viewName === 'expedientes') renderizarHistorial();
         if (viewName === 'clientes') cargarClientesActivos();
+        if (viewName === 'productos') cargarListaGlobalProductos(); 
+        if (viewName === 'catalogo') cargarCatalogo();
+        if (viewName === 'transacciones') cargarListaGlobalTransacciones(); 
     }
 
+    // ==========================================
+    // LÓGICA DE CLIENTES (AGREGAR Y BAJA)
+    // ==========================================
     function abrirModalAgregarPersona() { document.getElementById('modal-agregar-persona').classList.add('open'); }
     function cerrarModalAgregarPersona() { document.getElementById('modal-agregar-persona').classList.remove('open'); }
+    
+    function abrirModalBajaCliente() { document.getElementById('modal-baja-cliente').classList.add('open'); }
+    function cerrarModalBajaCliente() { document.getElementById('modal-baja-cliente').classList.remove('open'); }
+
+    async function apiCrearPersona() {
+        const id = document.getElementById('person-id').value.trim();
+        const nombre = document.getElementById('person-name').value.trim();
+        const apellido = document.getElementById('person-lastname').value.trim();
+        const tipoPersona = document.getElementById('person-type').value;
+
+        if (!id || !nombre || !apellido) return alert('Todos los campos son obligatorios para ingresar al sistema.');
+        
+        const btn = event.currentTarget;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...'; 
+        btn.disabled = true;
+
+        try {
+            const res = await fetch('/api/personas', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cedula: id, nombre, apellido, tipoPersona })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            alert(data.mensaje);
+            cerrarModalAgregarPersona();
+            document.getElementById('person-id').value = ''; document.getElementById('person-name').value = ''; document.getElementById('person-lastname').value = '';
+            
+            if(document.getElementById('section-clientes').classList.contains('active')) cargarClientesActivos();
+        } catch (err) { alert(`Error al guardar: ${err.message}`); }
+        finally { btn.innerHTML = 'Guardar Cliente'; btn.disabled = false; }
+    }
+
+    async function apiDarDeBajaCliente() {
+        const cedula = document.getElementById('baja-id').value.trim();
+        const nombre = document.getElementById('baja-name').value.trim();
+        const motivo = document.getElementById('baja-motivo').value.trim();
+
+        if(!cedula || !nombre || !motivo) return alert("Todos los campos (Cédula, Nombre y Motivo) son obligatorios.");
+        if(!confirm(`¿Estás seguro de eliminar todo registro core de ${nombre}?`)) return;
+
+        try {
+            const res = await fetch('/api/clientes/baja', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cedula, motivo })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            alert(data.mensaje);
+            cerrarModalBajaCliente();
+            cargarClientesActivos(); 
+        } catch (err) { alert(`Error al eliminar: ${err.message}`); }
+    }
+
+    // ==========================================
+    // LÓGICA DE GESTIÓN GLOBAL - PRODUCTOS
+    // ==========================================
+    async function cargarListaGlobalProductos() {
+        const tbody = document.getElementById('lista-global-productos-body');
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>';
+        
+        try {
+            const res = await fetch('/api/productos');
+            const data = await res.json();
+            
+            if(!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No hay productos registrados.</td></tr>'; 
+                return;
+            }
+
+            tbody.innerHTML = data.map(p => `
+                <tr style="border-bottom:1px solid rgba(56, 68, 77, 0.4);">
+                    <td style="font-family:monospace; color:var(--x-primary); padding:10px 6px;">${p.D_NumeroProducto}</td>
+                    
+                    <td style="color:var(--success-green); font-weight:500;">${p.NombreProducto}</td>
+                    
+                    <td><span style="background-color:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px; font-size:12px;">Tipo XML: ${p.C_TipoProducto}</span></td>
+                    
+                    <td style="text-align:right;">
+                        <button class="btn-buscar-x" style="background-color:#1a73e8; padding:6px 10px; font-size:12px;" onclick="abrirModalProductoGlobal('${p.D_NumeroProducto}', '${p.C_IdPersona}', ${p.C_TipoProducto}, ${p.M_Saldo})"><i class="fas fa-edit"></i> Editar</button>
+                        <button class="btn-buscar-x" style="background-color:var(--danger-red); padding:6px 10px; font-size:12px;" onclick="abrirModalBajaProducto('${p.D_NumeroProducto}')"><i class="fas fa-trash"></i> Eliminar</button>
+                    </td>
+                </tr>
+            `).join('');
+
+        } catch (e) { 
+            tbody.innerHTML = `<tr><td colspan="4" style="color:red;">Error: ${e.message}</td></tr>`; 
+        }
+    }
+
+    function abrirModalProductoGlobal(id = '', idCliente = '', tipo = '', saldo = '') {
+        const modo = id ? 'EDIT' : 'NEW';
+        document.getElementById('prod-global-modo').value = modo;
+        document.getElementById('prod-global-id').value = id;
+        document.getElementById('prod-global-id').disabled = (modo === 'EDIT'); 
+        document.getElementById('prod-global-cliente').value = idCliente;
+        document.getElementById('prod-global-tipo').value = tipo;
+        document.getElementById('prod-global-saldo').value = saldo;
+        
+        document.getElementById('modal-prod-title').innerText = modo === 'EDIT' ? 'Editar Producto' : 'Crear Producto';
+        document.getElementById('modal-producto-global').classList.add('open');
+    }
+    
+    function cerrarModalProductoGlobal() { document.getElementById('modal-producto-global').classList.remove('open'); }
+
+    async function guardarProductoGlobal() {
+        const modo = document.getElementById('prod-global-modo').value;
+        const numProd = document.getElementById('prod-global-id').value.trim();
+        const idCliente = document.getElementById('prod-global-cliente').value;
+        const tipoProd = document.getElementById('prod-global-tipo').value;
+        const saldo = document.getElementById('prod-global-saldo').value;
+
+        if(!numProd || !idCliente || !tipoProd || !saldo) return alert("Todos los campos son obligatorios.");
+
+        try {
+            const url = modo === 'EDIT' ? `/api/productos/${encodeURIComponent(numProd)}` : '/api/productos';
+            const res = await fetch(url, {
+                method: modo === 'EDIT' ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(modo === 'EDIT' ? { idCliente, tipoProducto: tipoProd, saldo } : { numeroProducto: numProd, idCliente, tipoProducto: tipoProd, saldoInicial: saldo })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            alert("Operación exitosa.");
+            cerrarModalProductoGlobal();
+            cargarListaGlobalProductos();
+        } catch (e) { alert("Fallo: " + e.message); }
+    }
+
+    function abrirModalBajaProducto(idProducto) {
+        document.getElementById('baja-prod-id').value = idProducto;
+        document.getElementById('modal-baja-producto').classList.add('open');
+    }
+    function cerrarModalBajaProducto() { document.getElementById('modal-baja-producto').classList.remove('open'); }
+
+    async function apiDarDeBajaProducto() {
+        const idProducto = document.getElementById('baja-prod-id').value;
+        try {
+            const res = await fetch(`/api/productos/${encodeURIComponent(idProducto)}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            alert(data.mensaje);
+            cerrarModalBajaProducto();
+            cargarListaGlobalProductos();
+        } catch(e) { alert("Error al eliminar: " + e.message); }
+    }
+
+    // ==========================================
+    // LÓGICA DE CATÁLOGO DE TIPOS DE PRODUCTO
+    // ==========================================
+    async function cargarCatalogo() {
+        const tbody = document.getElementById('lista-catalogo-body');
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>';
+        try {
+            const res = await fetch('/api/tipos-productos');
+            const data = await res.json();
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--x-text-muted);">No hay tipos registrados.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map(p => `
+                <tr style="border-bottom:1px solid rgba(56,68,77,0.4);">
+                    <td style="padding:12px 6px;">
+                        <span style="background-color:rgba(29,155,240,0.12); color:var(--x-primary); padding:4px 10px; border-radius:4px; font-size:13px; font-family:monospace; font-weight:700;">${p.IdProducto}</span>
+                    </td>
+                    <td style="color:var(--x-text-main); font-weight:500; padding:12px 6px;">${p.Nombre}</td>
+                    <td style="text-align:right; padding:12px 6px;">
+                        <button class="btn-buscar-x" style="background-color:#1a73e8; padding:6px 12px; font-size:12px;" onclick="abrirModalCatalogo(${p.IdProducto}, \`${p.Nombre.replace(/`/g, '\\`')}\`)">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button class="btn-buscar-x" style="background-color:var(--danger-red); padding:6px 12px; font-size:12px;" onclick="eliminarTipoCatalogo(${p.IdProducto}, \`${p.Nombre.replace(/`/g, '\\`')}\`)">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="3" style="color:var(--danger-red); text-align:center;">Error: ${e.message}</td></tr>`;
+        }
+    }
+
+    function abrirModalCatalogo(id = '', nombre = '') {
+        const modo = id ? 'EDIT' : 'NEW';
+        document.getElementById('cat-modo').value = modo;
+        document.getElementById('cat-id').value = id;
+        document.getElementById('cat-id').disabled = (modo === 'EDIT');
+        document.getElementById('cat-nombre').value = nombre;
+        document.getElementById('modal-catalogo-title').innerText = modo === 'EDIT' ? 'Editar Tipo de Producto' : 'Agregar Tipo de Producto';
+        document.getElementById('modal-catalogo').classList.add('open');
+    }
+
+    function cerrarModalCatalogo() {
+        document.getElementById('modal-catalogo').classList.remove('open');
+        document.getElementById('cat-id').disabled = false;
+    }
+
+    async function guardarCatalogo() {
+        const modo = document.getElementById('cat-modo').value;
+        const id   = document.getElementById('cat-id').value.trim();
+        const nombre = document.getElementById('cat-nombre').value.trim();
+        if (!id || !nombre) return alert('El Tipo XML y el Nombre son obligatorios.');
+        try {
+            const url    = modo === 'EDIT' ? `/api/tipos-productos/${id}` : '/api/tipos-productos';
+            const method = modo === 'EDIT' ? 'PUT' : 'POST';
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idProducto: id, nombre })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            alert(data.mensaje || 'Operación exitosa.');
+            cerrarModalCatalogo();
+            cargarCatalogo();
+        } catch (e) { alert('Error: ' + e.message); }
+    }
+
+    async function eliminarTipoCatalogo(id, nombre) {
+        if (!confirm(`¿Eliminar el tipo "${nombre}" (XML: ${id})?\nEsta acción es irreversible.`)) return;
+        try {
+            const res = await fetch(`/api/tipos-productos/${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            alert(data.mensaje || 'Tipo eliminado.');
+            cargarCatalogo();
+        } catch (e) { alert('Error al eliminar: ' + e.message); }
+    }
+
+    // ==========================================
+    // LÓGICA DE GESTIÓN GLOBAL - TRANSACCIONES
+    // ==========================================
+    async function cargarListaGlobalTransacciones() {
+        const tbody = document.getElementById('lista-global-transacciones-body');
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Cargando historial...</td></tr>';
+        try {
+            const res = await fetch('/api/transacciones');
+            const data = await res.json();
+            if(!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay transacciones registradas.</td></tr>'; return;
+            }
+            tbody.innerHTML = data.map(t => {
+                const color = t.C_IdTipoTransaccion == 1 ? 'var(--success-green)' : 'var(--danger-red)';
+                const icono = t.C_IdTipoTransaccion == 1 ? 'fa-arrow-up' : 'fa-arrow-down';
+                return `
+                    <tr style="border-bottom:1px solid rgba(56, 68, 77, 0.4);">
+                        <td style="font-weight:bold; color: var(--x-text-muted); padding:10px 6px;">#${t.Id_Transaccion}</td>
+                        <td style="font-family:monospace; color: var(--x-primary);">${t.D_NumeroProducto}</td>
+                        <td>${t.NombreCliente || 'No asignado'} <br><span style="font-size:11px;color:var(--x-text-muted);">Céd: ${t.CedulaCliente}</span></td>
+                        <td style="color:${color};"><i class="fas ${icono}"></i> ${t.C_IdTipoTransaccion == 1 ? 'Ingreso' : 'Egreso'}</td>
+                        <td style="color:${color}; font-weight:bold;">₡${t.M_Monto.toLocaleString('es-CR')}</td>
+                        <td style="text-align:right;">
+                            <button class="btn-buscar-x" style="background-color:#f59e0b; font-size:12px; color:#000; padding:6px 10px;" onclick="abrirModalTransaccionGlobal('${t.Id_Transaccion}', '${t.D_NumeroProducto}', ${t.C_IdTipoTransaccion}, ${t.M_Monto})"><i class="fas fa-edit"></i> Editar</button>
+                            <button class="btn-buscar-x" style="background-color:var(--danger-red); padding:6px 10px; font-size:12px;" onclick="abrirModalBajaTransaccion('${t.Id_Transaccion}')"><i class="fas fa-trash"></i> Eliminar</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (e) { 
+            tbody.innerHTML = `<tr><td colspan="6" style="color:var(--danger-red); text-align:center;">Error al sincronizar: ${e.message}</td></tr>`; 
+        }
+    }
+
+    function abrirModalTransaccionGlobal(id = '', prod = '', tipo = '1', monto = '') {
+        const modo = id ? 'EDIT' : 'NEW';
+        document.getElementById('trx-global-modo').value = modo;
+        
+        document.getElementById('div-trx-id').style.display = modo === 'EDIT' ? 'flex' : 'none';
+        document.getElementById('trx-global-id').value = id;
+        document.getElementById('trx-global-prod').value = prod;
+        document.getElementById('trx-global-tipo').value = tipo;
+        document.getElementById('trx-global-monto').value = monto;
+        
+        document.getElementById('modal-trx-title').innerText = modo === 'EDIT' ? 'Editar Transacción #' + id : 'Nueva Transacción';
+        document.getElementById('modal-transaccion-global').classList.add('open');
+    }
+
+    function cerrarModalTransaccionGlobal() { document.getElementById('modal-transaccion-global').classList.remove('open'); }
+
+    async function guardarTransaccionGlobal() {
+        const modo = document.getElementById('trx-global-modo').value;
+        const idTx = document.getElementById('trx-global-id').value;
+        const prod = document.getElementById('trx-global-prod').value.trim();
+        const tipo = document.getElementById('trx-global-tipo').value;
+        const monto = document.getElementById('trx-global-monto').value;
+
+        if(!prod || !monto) return alert("Producto y Monto son obligatorios.");
+
+        try {
+            const url = modo === 'EDIT' ? `/api/transacciones/${idTx}` : '/api/transacciones';
+            const res = await fetch(url, {
+                method: modo === 'EDIT' ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(modo === 'EDIT' ? { idProductoRef: prod, tipoTransaccion: tipo, monto } : { numeroProducto: prod, tipoTransaccion: tipo, monto })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            alert("Operación exitosa.");
+            cerrarModalTransaccionGlobal();
+            cargarListaGlobalTransacciones();
+        } catch (e) { alert("Error: " + e.message); }
+    }
+
+    function abrirModalBajaTransaccion(idTransaccion) {
+        document.getElementById('baja-trx-id').value = idTransaccion;
+        document.getElementById('modal-baja-transaccion').classList.add('open');
+    }
+    function cerrarModalBajaTransaccion() { document.getElementById('modal-baja-transaccion').classList.remove('open'); }
+
+    async function apiDarDeBajaTransaccion() {
+        const idTransaccion = document.getElementById('baja-trx-id').value;
+        try {
+            const res = await fetch(`/api/transacciones/${idTransaccion}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            alert(data.mensaje);
+            cerrarModalBajaTransaccion();
+            cargarListaGlobalTransacciones();
+        } catch(e) { alert("Error al anular: " + e.message); }
+    }
+
+
+    // ==========================================
+    // LÓGICA DE GEO, BUSCADOR Y EXPEDIENTES
+    // ==========================================
     function forceCerrarModal() { document.getElementById('modal-expediente').classList.remove('open'); }
 
     async function manejarCambioProvincia() {
@@ -408,12 +1006,10 @@
             const res = await fetch('/api/geo/provincias');
             if (!res.ok) throw new Error("Fallo en red al obtener provincias");
             const data = await res.json();
-            
             select.innerHTML = '<option value="">Provincia</option>';
             data.forEach(p => {
                 const opt = document.createElement('option');
-                opt.value = p.Id_Provincia; 
-                opt.textContent = p.D_NombreProvincia; 
+                opt.value = p.Id_Provincia; opt.textContent = p.D_NombreProvincia; 
                 select.appendChild(opt);
             });
         } catch (err) { console.error('Error cargando Provincias:', err); }
@@ -432,11 +1028,9 @@
             const res = await fetch(`/api/geo/cantones/${idProvincia}`);
             if (!res.ok) throw new Error("Fallo en red al obtener cantones");
             const data = await res.json();
-
             data.forEach(c => {
                 const opt = document.createElement('option');
-                opt.value = c.Id_Canton; 
-                opt.textContent = c.D_NombreCanton; 
+                opt.value = c.Id_Canton; opt.textContent = c.D_NombreCanton; 
                 selectCanton.appendChild(opt);
             });
         } catch (err) { console.error('Error cargando Cantones:', err); }
@@ -452,11 +1046,9 @@
             const res = await fetch(`/api/geo/distritos/${idCanton}`);
             if (!res.ok) throw new Error("Fallo en red al obtener distritos");
             const data = await res.json();
-
             data.forEach(d => {
                 const opt = document.createElement('option');
-                opt.value = d.Id_Distrito; 
-                opt.textContent = d.D_NombreDistrito; 
+                opt.value = d.Id_Distrito; opt.textContent = d.D_NombreDistrito; 
                 selectDistrito.appendChild(opt);
             });
         } catch (err) { console.error('Error cargando Distritos:', err); }
@@ -476,9 +1068,7 @@
                 container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--x-text-muted);">No hay clientes registrados formalmente en el Core.</div>`; 
                 return;
             }
-
             container.innerHTML = '';
-
             cacheClientesActivos.forEach((c, index) => {
                 const esJuridico = c.C_IdTipoPersona === 2; 
                 const isotipoClass = esJuridico ? 'mldc-isotipo-card juridico-isotipo' : 'mldc-isotipo-card'; 
@@ -490,495 +1080,6 @@
         } catch (err) {
             container.innerHTML = `<div style="text-align:center; padding:40px; color:red;">Error de conexión con el backend al cargar clientes.</div>`;
         }
-    }
-
-    // --- CÁLCULO DE EDAD DINÁMICO ---
-    function calcularEdadDesdeFecha() {
-        const fechaInput = document.getElementById('modal-edit-fechanac').value;
-        if(!fechaInput) return;
-        
-        const hoy = new Date();
-        const cumpleanos = new Date(fechaInput);
-        let edad = hoy.getFullYear() - cumpleanos.getFullYear();
-        const m = hoy.getMonth() - cumpleanos.getMonth();
-        
-        if (m < 0 || (m === 0 && hoy.getDate() < cumpleanos.getDate())) {
-            edad--;
-        }
-        
-        document.getElementById('modal-edit-edad').value = edad >= 0 ? edad : 0;
-    }
-
-    async function apiCrearPersona() {
-        const id = document.getElementById('person-id').value;
-        const nombre = document.getElementById('person-name').value;
-        const apellido = document.getElementById('person-lastname').value;
-        const tipoPersona = document.getElementById('person-type').value;
-
-        if (!id || !nombre || !apellido) return alert('Todos los campos son requeridos para guardar un cliente.');
-        try {
-            const res = await fetch('/api/personas', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, nombre, apellido, tipoPersona })
-            });
-            const data = await res.json();
-            if (data.error) throw new Error(data.error);
-            alert(data.mensaje);
-            cerrarModalAgregarPersona();
-            document.getElementById('person-id').value = ''; document.getElementById('person-name').value = ''; document.getElementById('person-lastname').value = '';
-            
-            if(document.getElementById('section-clientes').classList.contains('active')) cargarClientesActivos();
-        } catch (err) { alert(`Error al guardar: ${err.message}`); }
-    }
-
-    async function apiActualizarPersonaDesdeModal(id) {
-        const nuevoNombre = document.getElementById('modal-edit-name').value;
-        const nuevoApellido = document.getElementById('modal-edit-lastname').value;
-        
-        if (!nuevoNombre || !nuevoApellido) return alert('Los campos nombre y apellido no pueden quedar vacíos.');
-        
-        alert("Los datos personales y demográficos se han actualizado y fijado exitosamente en el sistema local. Puedes seguir realizando modificaciones si lo requieres.");
-        
-        uiCalcularRiesgoCliente(id, false);
-    }
-
-    async function apiEliminarPersonaDesdeModal(id) {
-        if (!confirm('¿Desea eliminar este registro junto con sus cuentas asociadas?')) return;
-        try {
-            const res = await fetch(`/api/personas/${id}`, { method: 'DELETE' });
-            const data = await res.json();
-            if (data.error) throw new Error(data.error);
-            alert(data.mensaje); 
-            forceCerrarModal();
-            historialAbiertos = historialAbiertos.filter(h => h.C_IdPersona !== String(id));
-            if(document.getElementById('section-clientes').classList.contains('active')) cargarClientesActivos();
-            else buscarClienteTradicional(); 
-        } catch (err) { alert(`Error en cascada relacional: ${err.message}`); }
-    }
-
-    async function apiCrearProductoDesdeModal(idCliente) {
-        const numeroProducto = document.getElementById('modal-new-prod-id').value.trim();
-        const tipoProducto = document.getElementById('modal-new-prod-type').value;
-        const saldoInicial = document.getElementById('modal-new-prod-saldo').value;
-
-        if (!numeroProducto || !saldoInicial) return alert('Ingrese el código de instrumento y el saldo inicial.');
-        try {
-            const res = await fetch('/api/productos', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ numeroProducto, idCliente, tipoProducto, saldoInicial })
-            });
-            const data = await res.json();
-            if (data.error) throw new Error(data.error);
-            alert(data.mensaje); recargarTablaProductosModal(idCliente);
-        } catch (err) { alert(`Fallo en el SP de inserción: ${err.message}`); }
-    }
-
-    async function apiEliminarProducto(numeroProducto, idCliente) {
-        if (!confirm(`¿Desea dar de baja el producto ${numeroProducto}?`)) return;
-        try {
-            const res = await fetch(`/api/productos/${numeroProducto}`, { method: 'DELETE' });
-            const data = await res.json();
-            if (data.error) throw new Error(data.error);
-            alert(data.mensaje); recargarTablaProductosModal(idCliente);
-        } catch (err) { alert('Ajuste relacional completado.'); recargarTablaProductosModal(idCliente); }
-    }
-
-    async function apiRegistrarTransaccionExplicita(idCliente) {
-        const numeroProducto = document.getElementById('modal-trx-prod').value;
-        const tipoTransaccion = document.getElementById('modal-trx-tipo').value;
-        const monto = document.getElementById('modal-trx-monto').value;
-
-        if(!numeroProducto) return alert('Debe seleccionar una cuenta válida.');
-        if(!monto || isNaN(monto) || parseFloat(monto) <= 0) return alert('Ingrese un monto mayor a 0 para la transacción.');
-
-        try {
-            const res = await fetch('/api/transacciones', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ numeroProducto, monto: parseFloat(monto), tipoTransaccion: parseInt(tipoTransaccion) })
-            });
-            const data = await res.json();
-            if (data.error) throw new Error(data.error);
-            alert(`Transacción procesada correctamente.`);
-            
-            document.getElementById('modal-trx-monto').value = '';
-            recargarTablaProductosModal(idCliente);
-        } catch (err) { alert(`Error al registrar la transacción: ${err.message}`); }
-    }
-
-    async function recargarTablaProductosModal(idCliente) {
-        const tbody = document.getElementById('modal-table-productos');
-        const selectTrx = document.getElementById('modal-trx-prod');
-        
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--x-text-muted);">Sincronizando balances...</td></tr>';
-        
-        try {
-            const res = await fetch(`/api/clientes/${idCliente}/productos`);
-            const productos = await res.json();
-            
-            const mapaNombres = {
-                1: 'Cuentas a la vista', 2: 'Depósitos a plazo', 3: 'Cuentas de expediente simplificado',
-                4: 'Cuentas para pago de planillas o servicios', 5: 'Depósitos judiciales', 6: 'Créditos directos',
-                7: 'Créditos hipotecarios', 8: 'Tarjetas de Crédito', 9: 'Líneas de crédito', 10: 'Descuento de facturas',
-                11: 'Arrendamientos financieros', 12: 'Avales y garantías emitidas', 13: 'Transferencias de fondos',
-                14: 'Remesas de dinero', 15: 'Compra y venta de divisas', 16: 'Fideicomisos', 17: 'Cajeros automáticos',
-                18: 'Banca en línea y aplicaciones móviles', 19: 'Cajas de seguridad'
-            };
-
-            if (productos.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--x-text-muted);">Sin instrumentos activos.</td></tr>';
-                selectTrx.innerHTML = '<option value="">No hay cuentas asociadas</option>';
-                return;
-            }
-
-            let html = '';
-            let optionsHtml = '';
-            productos.forEach(p => {
-                const desc = mapaNombres[p.C_TipoProducto] || 'Otro Instrumento';
-                html += `
-                    <tr>
-                        <td style="font-family:monospace;color:var(--x-primary);">${p.D_NumeroProducto}</td>
-                        <td>${desc}</td>
-                        <td style="font-weight:700;text-align:right;color:var(--success-green);">₡${p.M_Saldo.toFixed(2)}</td>
-                        <td style="text-align:center;">
-                            <button class="btn-action-icon" onclick="apiEliminarProducto('${p.D_NumeroProducto}', '${idCliente}')"><i class="fas fa-times-circle"></i></button>
-                        </td>
-                    </tr>
-                `;
-                optionsHtml += `<option value="${p.D_NumeroProducto}">${p.D_NumeroProducto} (${desc})</option>`;
-            });
-            tbody.innerHTML = html;
-            selectTrx.innerHTML = optionsHtml;
-        } catch (err) {
-            tbody.innerHTML = '<tr><td colspan="4" style="color:red;">Error al refrescar la tabla.</td></tr>';
-        }
-    }
-
-    // --- CÁLCULO ESTRICTO ---
-    function uiCalcularRiesgoCliente(idCliente, isInitial = false) {
-        const edadInput = document.getElementById('modal-edit-edad');
-        const ingresosInput = document.getElementById('modal-edit-ingresos');
-        const provinciaInput = document.getElementById('modal-edit-provincia');
-        const cantonInput = document.getElementById('modal-edit-canton');
-        const estadoCivilInput = document.getElementById('modal-edit-estadocivil');
-        const profesionInput = document.getElementById('modal-edit-profesion');
-        
-        if(!edadInput) return;
-
-        const edad = parseInt(edadInput.value) || 30;
-        const ingresos = parseFloat(ingresosInput.value) || 0;
-        const provNombre = provinciaInput.value || 'San José';
-        const cantonNombre = cantonInput.value || 'Central';
-        const estadoCivil = estadoCivilInput.value || 'Soltero(a)';
-        const profesion = profesionInput.value || 'Desconocida';
-
-        // 1. Lógica Inversa de Ingresos
-        let riesgoIngreso = 12.5; 
-        if (ingresos >= 100000000) riesgoIngreso = 1.0;
-        else if (ingresos > 500000) riesgoIngreso = 3.0; // Riesgo bajo
-        else if (ingresos >= 300000 && ingresos <= 500000) riesgoIngreso = 6.0; // Riesgo medio
-        else if (ingresos > 100000 && ingresos < 300000) riesgoIngreso = 10.0; // Riesgo alto
-        else if (ingresos <= 100000) riesgoIngreso = 12.5; // Riesgo muy alto
-
-        // 2. Lógica de Estado Civil (Dependiente de Ingresos)
-        let riesgoEstadoCivil = 12.5;
-        if (ingresos > 500000) {
-            riesgoEstadoCivil = 2.5; // Riesgo bajo (1-4)
-        } else if (ingresos >= 300000 && ingresos <= 500000) {
-            riesgoEstadoCivil = 6.5; // Riesgo medio (5-8)
-        } else {
-            riesgoEstadoCivil = 11.0; // Riesgo alto (9-12)
-        }
-
-        // 3. Lógica de Edad
-        let riesgoEdad = 4.0;
-        if (edad < 25 || edad > 65) riesgoEdad = 12.0; 
-
-        // 4. Lógica Geográfica Dinámica (Provincia, Cantón, Distrito)
-        const mapaProvincias = {
-            "Heredia": 1.0, "Cartago": 3.5, "Alajuela": 6.0, 
-            "San José": 8.5, "Guanacaste": 7.0, "Puntarenas": 10.5, "Limón": 12.5
-        };
-        const valorProv = mapaProvincias[provNombre] || 5.0;
-        
-        let factorCanton = (cantonNombre.length % 5) - 2; 
-        let riesgoCanton = Math.min(12.5, Math.max(1.0, valorProv + factorCanton));
-        let riesgoDistrito = Math.min(12.5, Math.max(1.0, riesgoCanton - 1.5));
-
-        const riesgoProfesion = profesion.toLowerCase().includes('estudiante') ? 8.0 : 4.5;
-        const riesgoSociedad = document.getElementById('modal-edit-type').value === '2' ? 10.5 : 3.0; 
-
-        const puntajes = [
-            { id: "v1", valor: valorProv, label: `1. Provincia (${provNombre})` },
-            { id: "v2", valor: riesgoCanton, label: `2. Cantón (${cantonNombre})` },
-            { id: "v3", valor: riesgoDistrito, label: `3. Distrito` },
-            { id: "v4", valor: riesgoProfesion, label: `4. Profesión (${profesion})` },
-            { id: "v5", valor: riesgoIngreso, label: `5. Ingresos (₡${(ingresos/1000000).toFixed(1)}M)` },
-            { id: "v6", valor: riesgoEdad, label: `6. Edad (${edad} años)` },
-            { id: "v7", valor: riesgoSociedad, label: `7. Tipo Persona/Sociedad` },
-            { id: "v8", valor: riesgoEstadoCivil, label: `8. Estado Civil (${estadoCivil})` }
-        ];
-
-        let total = 0;
-        puntajes.forEach(p => {
-            const elInput = document.getElementById(`riesgo-${p.id}-input`);
-            const elLabel = document.getElementById(`riesgo-${p.id}-label`);
-            if(elInput && elLabel) {
-                const valFijo = p.valor.toFixed(1);
-                elInput.value = valFijo;
-                elInput.style.color = p.valor > 6.25 ? "var(--warning-yellow)" : "var(--success-green)";
-                if (p.valor > 10) elInput.style.color = "var(--danger-red)";
-                elLabel.innerText = p.label;
-            }
-            total += p.valor;
-        });
-
-        actualizarUIBadgeRiesgo(total);
-
-        if(!isInitial) alert(`Cálculo automático procesado. Se han aplicado las políticas de ingresos para el cliente ${idCliente}.`);
-    }
-
-    // --- RECÁLCULO MANUAL ---
-    function uiRecalcularRiesgoManual(idCliente) {
-        let total = 0;
-        for(let i=1; i<=8; i++) {
-            const elInput = document.getElementById(`riesgo-v${i}-input`);
-            if(elInput) {
-                let val = parseFloat(elInput.value) || 0;
-                
-                if (val > 12.5) { val = 12.5; elInput.value = "12.5"; }
-                if (val < 0) { val = 0; elInput.value = "0.0"; }
-                
-                total += val;
-                
-                elInput.style.color = val > 6.25 ? "var(--warning-yellow)" : "var(--success-green)";
-                if (val > 10) elInput.style.color = "var(--danger-red)";
-            }
-        }
-
-        actualizarUIBadgeRiesgo(total);
-        alert(`Recálculo manual aplicado. Nuevo total de riesgo: ${total.toFixed(1)} / 100.`);
-    }
-
-    function actualizarUIBadgeRiesgo(total) {
-        document.getElementById('modal-riesgo-total').innerText = total.toFixed(1);
-
-        let nivel = 'Bajo';
-        let color = 'var(--success-green)';
-        if(total > 33 && total <= 66) { nivel = 'Medio'; color = 'var(--warning-yellow)'; }
-        if(total > 66) { nivel = 'Alto'; color = 'var(--danger-red)'; }
-
-        const badge = document.getElementById('modal-riesgo-nivel');
-        badge.innerText = `Riesgo ${nivel}`;
-        badge.style.backgroundColor = color;
-        badge.style.color = '#fff';
-    }
-
-    function abrirExpediente(index) {
-        const cliente = cacheClientes[index];
-        registrarVisitaCliente(cliente.C_IdPersona);
-        renderizarModalExpediente(cliente);
-    }
-
-    function abrirExpedienteDesdeActivos(index) {
-        const cliente = cacheClientesActivos[index];
-        registrarVisitaCliente(cliente.C_IdPersona);
-        renderizarModalExpediente(cliente);
-    }
-
-    function abrirExpedienteDesdeHistorial(index) {
-        const cliente = historialAbiertos[index];
-        registrarVisitaCliente(cliente.C_IdPersona);
-        renderizarModalExpediente(cliente);
-    }
-    async function renderizarModalExpediente(cliente) {
-        if (!cliente) return;
-
-        // 1. Registro automático en la Base de Datos (prioriza frecuencia para búsquedas)
-        // Se ejecuta cada vez que el usuario abre un expediente.
-        try {
-            await fetch(`/api/clientes/${cliente.C_IdPersona}/visita`, { method: 'POST' });
-        } catch (err) {
-            console.error('Error registrando visita en BD:', err);
-        }
-
-        // 2. Gestión local del historial para la UI
-        const yaExiste = historialAbiertos.some(h => String(h.C_IdPersona) === String(cliente.C_IdPersona));
-        if (!yaExiste) historialAbiertos.push(cliente);
-
-        document.getElementById('modal-titulo').innerText = `Expediente Core: ID ${cliente.C_IdPersona}`;
-        
-        const randEdad = Math.floor(Math.random() * 50) + 20;
-        const añoNac = new Date().getFullYear() - randEdad;
-        const mesNac = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
-        const diaNac = String(Math.floor(Math.random() * 28) + 1).padStart(2, '0');
-        const randFechaNac = `${añoNac}-${mesNac}-${diaNac}`;
-
-        const randIngreso = Math.floor(Math.random() * 3000000) + 500000;
-
-        document.getElementById('modal-contenido').innerHTML = `
-            <h5 style="margin: 0 0 12px 0; color: var(--x-primary); font-size:13px; text-transform:uppercase;">1. Datos de la Persona (Información Demográfica)</h5>
-            <div style="display:flex; flex-direction:column; gap:10px; background-color:var(--x-bg-card); padding:14px; border-radius:12px; border:1px solid var(--x-border); margin-bottom:16px;">
-                
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
-                    <div style="display:flex; flex-direction:column; gap:4px;">
-                        <span style="font-size:11px; color:var(--x-text-muted);">Nombre</span>
-                        <input type="text" id="modal-edit-name" class="crud-input-style" value="${cliente.D_Nombre || ''}">
-                    </div>
-                    <div style="display:flex; flex-direction:column; gap:4px;">
-                        <span style="font-size:11px; color:var(--x-text-muted);">Primer Apellido</span>
-                        <input type="text" id="modal-edit-lastname" class="crud-input-style" value="${cliente.D_PrimerApellido || ''}">
-                    </div>
-                    
-                    <div style="display:flex; flex-direction:column; gap:4px;">
-                        <span style="font-size:11px; color:var(--x-text-muted);">Fecha Nacimiento</span>
-                        <input type="date" id="modal-edit-fechanac" class="crud-input-style" value="${randFechaNac}" onchange="calcularEdadDesdeFecha()">
-                    </div>
-                    <div style="display:flex; flex-direction:column; gap:4px;">
-                        <span style="font-size:11px; color:var(--x-text-muted);">Edad (Cálculo Automático)</span>
-                        <input type="number" id="modal-edit-edad" class="crud-input-style" value="${randEdad}" readonly style="background-color: rgba(255,255,255,0.05); color: #8899a6; border-color: transparent;">
-                    </div>
-                    
-                    <div style="display:flex; flex-direction:column; gap:4px;">
-                        <span style="font-size:11px; color:var(--x-text-muted);">Ingresos (₡)</span>
-                        <input type="number" id="modal-edit-ingresos" class="crud-input-style" value="${randIngreso}">
-                    </div>
-                    <div style="display:flex; flex-direction:column; gap:4px;">
-                        <span style="font-size:11px; color:var(--x-text-muted);">Provincia</span>
-                        <select id="modal-edit-provincia" class="crud-input-style">
-                            <option value="San José">San José</option>
-                            <option value="Alajuela">Alajuela</option>
-                            <option value="Cartago">Cartago</option>
-                            <option value="Heredia">Heredia</option>
-                            <option value="Guanacaste">Guanacaste</option>
-                            <option value="Puntarenas">Puntarenas</option>
-                            <option value="Limón">Limón</option>
-                        </select>
-                    </div>
-                    <div style="display:flex; flex-direction:column; gap:4px;">
-                        <span style="font-size:11px; color:var(--x-text-muted);">Cantón / Distrito</span>
-                        <input type="text" id="modal-edit-canton" class="crud-input-style" value="Central">
-                    </div>
-                    <div style="display:flex; flex-direction:column; gap:4px;">
-                        <span style="font-size:11px; color:var(--x-text-muted);">Profesión</span>
-                        <input type="text" id="modal-edit-profesion" class="crud-input-style" value="Asalariado">
-                    </div>
-                    <div style="display:flex; flex-direction:column; gap:4px;">
-                        <span style="font-size:11px; color:var(--x-text-muted);">Estado Civil</span>
-                        <select id="modal-edit-estadocivil" class="crud-input-style">
-                            <option value="Soltero(a)">Soltero(a)</option>
-                            <option value="Casado(a)">Casado(a)</option>
-                        </select>
-                    </div>
-                    <div style="display:flex; flex-direction:column; gap:4px;">
-                        <span style="font-size:11px; color:var(--x-text-muted);">Tipo Persona / Sociedad</span>
-                        <select id="modal-edit-type" class="crud-input-style">
-                            <option value="1" ${cliente.C_IdTipoPersona === 1 ? 'selected' : ''}>Persona Física</option>
-                            <option value="2" ${cliente.C_IdTipoPersona === 2 ? 'selected' : ''}>Persona Jurídica</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div style="display:flex; gap:10px; margin-top:10px;">
-                    <button class="btn-buscar-x" style="background-color:var(--success-green); flex:1;" onclick="apiActualizarPersonaDesdeModal('${cliente.C_IdPersona}')">Actualizar y Fijar Datos</button>
-                    <button class="btn-buscar-x" style="background-color:var(--danger-red); flex:1;" onclick="apiEliminarPersonaDesdeModal('${cliente.C_IdPersona}')">Eliminar Persona</button>
-                </div>
-            </div>
-
-            <h5 style="margin: 16px 0 8px 0; color: var(--x-primary); font-size:13px; text-transform:uppercase;">2. Análisis de Riesgo CICAC</h5>
-            <div style="background-color:var(--x-bg-card); padding:14px; border-radius:12px; border:1px solid var(--x-border); margin-bottom:16px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
-                    <div>
-                        <strong style="font-size: 18px; color: var(--x-primary);">Puntaje Total: <span id="modal-riesgo-total">0.0</span> / 100</strong>
-                        <span id="modal-riesgo-nivel" style="margin-left: 10px; font-size: 13px; padding: 4px 8px; border-radius: 4px; background: #38444d;">Sin Evaluar</span>
-                    </div>
-                    <div style="display:flex; gap: 10px;">
-                        <button class="btn-buscar-x" style="background-color:#1a73e8;" onclick="uiCalcularRiesgoCliente('${cliente.C_IdPersona}', false)">Calcular Automático</button>
-                        <button class="btn-buscar-x" style="background-color:#117d3b;" onclick="uiRecalcularRiesgoManual('${cliente.C_IdPersona}')">Recalcular Manual</button>
-                    </div>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px; background-color: var(--x-bg); padding: 10px; border-radius: 8px;">
-                    <div class="riesgo-grid-row"><span id="riesgo-v1-label">1. Provincia</span> <div><input type="number" id="riesgo-v1-input" class="riesgo-input" step="0.1" min="0" max="12.5" value="0.0"> %</div></div>
-                    <div class="riesgo-grid-row"><span id="riesgo-v2-label">2. Cantón</span> <div><input type="number" id="riesgo-v2-input" class="riesgo-input" step="0.1" min="0" max="12.5" value="0.0"> %</div></div>
-                    <div class="riesgo-grid-row"><span id="riesgo-v3-label">3. Distrito</span> <div><input type="number" id="riesgo-v3-input" class="riesgo-input" step="0.1" min="0" max="12.5" value="0.0"> %</div></div>
-                    <div class="riesgo-grid-row"><span id="riesgo-v4-label">4. Profesión</span> <div><input type="number" id="riesgo-v4-input" class="riesgo-input" step="0.1" min="0" max="12.5" value="0.0"> %</div></div>
-                    <div class="riesgo-grid-row"><span id="riesgo-v5-label">5. Ingresos</span> <div><input type="number" id="riesgo-v5-input" class="riesgo-input" step="0.1" min="0" max="12.5" value="0.0"> %</div></div>
-                    <div class="riesgo-grid-row"><span id="riesgo-v6-label">6. Edad</span> <div><input type="number" id="riesgo-v6-input" class="riesgo-input" step="0.1" min="0" max="12.5" value="0.0"> %</div></div>
-                    <div class="riesgo-grid-row"><span id="riesgo-v7-label">7. Tipo Sociedad</span> <div><input type="number" id="riesgo-v7-input" class="riesgo-input" step="0.1" min="0" max="12.5" value="0.0"> %</div></div>
-                    <div class="riesgo-grid-row"><span id="riesgo-v8-label">8. Estado Civil</span> <div><input type="number" id="riesgo-v8-input" class="riesgo-input" step="0.1" min="0" max="12.5" value="0.0"> %</div></div>
-                </div>
-                <div style="margin-top: 10px; font-size: 11px; color: var(--x-text-muted); text-align: center;">* Alerta: Usa "Recalcular Manual" únicamente si alteras los porcentajes de forma manual (0 a 12.5%).</div>
-            </div>
-
-            <h5 style="margin: 16px 0 8px 0; color: var(--x-primary); font-size:13px; text-transform:uppercase;">3. Gestión de Productos Bancarios</h5>
-            <div style="display:flex; gap:10px; background-color:var(--x-bg-card); padding:14px; border-radius:12px; border:1px solid var(--x-border); margin-bottom:16px; align-items:flex-end;">
-                <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
-                    <span style="font-size:11px; color:var(--x-text-muted);">Número Cuenta</span>
-                    <input type="text" id="modal-new-prod-id" class="crud-input-style" placeholder="CTA-XXX" style="padding:6px 10px;">
-                </div>
-                <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
-                    <span style="font-size:11px; color:var(--x-text-muted);">Tipo Producto XML</span>
-                    <select id="modal-new-prod-type" class="crud-input-style" style="padding:6px 10px;">
-                        <option value="1">Cuenta a la vista</option>
-                        <option value="2">Depósito a plazo</option>
-                        <option value="3">Expediente simplificado</option>
-                        <option value="4">Pago planillas/servicios</option>
-                        <option value="5">Depósito judicial</option>
-                        <option value="6">Crédito directo</option>
-                        <option value="7">Crédito hipotecario</option>
-                        <option value="8">Tarjeta de Crédito</option>
-                        <option value="9">Línea de crédito</option>
-                        <option value="10">Descuento facturas</option>
-                        <option value="11">Arrendamiento financiero</option>
-                        <option value="12">Aval y garantía emitidas</option>
-                        <option value="13">Transferencia de fondos</option>
-                        <option value="14">Remesa de dinero</option>
-                        <option value="15">Compra y venta de divisas</option>
-                        <option value="16">Fideicomiso</option>
-                        <option value="17">Cajero automático</option>
-                        <option value="18">Banca en línea/apps</option>
-                        <option value="19">Caja de seguridad</option>
-                    </select>
-                </div>
-                <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
-                    <span style="font-size:11px; color:var(--x-text-muted);">Saldo Inicial</span>
-                    <input type="number" id="modal-new-prod-saldo" class="crud-input-style" placeholder="₡" style="padding:6px 10px;">
-                </div>
-                <button class="btn-buscar-x" style="padding:8px 14px;" onclick="apiCrearProductoDesdeModal('${cliente.C_IdPersona}')"><i class="fas fa-plus"></i> Añadir</button>
-            </div>
-
-            <table class="product-sub-table">
-                <thead><tr><th>Cuenta/Instrumento</th><th>Tipo</th><th>Saldo Actual</th><th style="text-align:center;">Baja</th></tr></thead>
-                <tbody id="modal-table-productos">
-                    <tr><td colspan="4" style="text-align:center;color:var(--x-text-muted);">Consultando catálogo transaccional...</td></tr>
-                </tbody>
-            </table>
-
-            <h5 style="margin: 24px 0 8px 0; color: var(--x-primary); font-size:13px; text-transform:uppercase;">4. Registrar Transacción Manual</h5>
-            <div style="display:flex; gap:10px; background-color:var(--x-bg-card); padding:14px; border-radius:12px; border:1px solid var(--x-border); align-items:flex-end;">
-                <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
-                    <span style="font-size:11px; color:var(--x-text-muted);">Cuenta Destino/Origen</span>
-                    <select id="modal-trx-prod" class="crud-input-style" style="padding:6px 10px;">
-                    </select>
-                </div>
-                <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
-                    <span style="font-size:11px; color:var(--x-text-muted);">Tipo de Movimiento</span>
-                    <select id="modal-trx-tipo" class="crud-input-style" style="padding:6px 10px;">
-                        <option value="1">Ingreso (+)</option>
-                        <option value="2">Egreso (-)</option>
-                    </select>
-                </div>
-                <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
-                    <span style="font-size:11px; color:var(--x-text-muted);">Monto a Procesar</span>
-                    <input type="number" id="modal-trx-monto" class="crud-input-style" placeholder="₡" style="padding:6px 10px;">
-                </div>
-                <button class="btn-buscar-x" style="padding:8px 14px; background-color: #f59e0b;" onclick="apiRegistrarTransaccionExplicita('${cliente.C_IdPersona}')"><i class="fas fa-paper-plane"></i> Ejecutar</button>
-            </div>
-        `;
-        document.getElementById('modal-expediente').classList.add('open');
-        
-        uiCalcularRiesgoCliente(cliente.C_IdPersona, true);
-        recargarTablaProductosModal(cliente.C_IdPersona);
     }
 
     function construirUrlBusqueda(termino, origen) {
@@ -1010,7 +1111,6 @@
                 const url = construirUrlBusqueda(termino, origen);
                 const res = await fetch(url);
                 let data = await res.json();
-                
                 cacheClientes = data;
 
                 if (!cacheClientes || cacheClientes.length === 0) { dropdown.style.display = 'none'; return; }
@@ -1104,6 +1204,239 @@
         });
     }
 
+    function calcularEdadDesdeFecha() {
+        const fechaInput = document.getElementById('modal-edit-fechanac').value;
+        if(!fechaInput) return;
+        const hoy = new Date();
+        const cumpleanos = new Date(fechaInput);
+        let edad = hoy.getFullYear() - cumpleanos.getFullYear();
+        const m = hoy.getMonth() - cumpleanos.getMonth();
+        if (m < 0 || (m === 0 && hoy.getDate() < cumpleanos.getDate())) { edad--; }
+        document.getElementById('modal-edit-edad').value = edad >= 0 ? edad : 0;
+    }
+
+    function abrirExpediente(index) {
+        const cliente = cacheClientes[index];
+        registrarVisitaCliente(cliente.C_IdPersona);
+        renderizarModalExpediente(cliente);
+    }
+
+    function abrirExpedienteDesdeActivos(index) {
+        const cliente = cacheClientesActivos[index];
+        registrarVisitaCliente(cliente.C_IdPersona);
+        renderizarModalExpediente(cliente);
+    }
+
+    function abrirExpedienteDesdeHistorial(index) {
+        const cliente = historialAbiertos[index];
+        registrarVisitaCliente(cliente.C_IdPersona);
+        renderizarModalExpediente(cliente);
+    }
+
+    async function renderizarModalExpediente(cliente) {
+    if (!cliente) return;
+    const yaExiste = historialAbiertos.some(h => String(h.C_IdPersona) === String(cliente.C_IdPersona));
+    if (!yaExiste) historialAbiertos.push(cliente);
+
+    document.getElementById('modal-titulo').innerText = `Expediente Core: ID ${cliente.C_IdPersona}`;
+
+    // --- NUEVA LÓGICA: Obtener datos de simulación desde el motor SQL ---
+    let perfil = {};
+    try {
+        const res = await fetch(`/api/perfil-simulado/${cliente.C_IdPersona}`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data && data.length > 0) perfil = data[0];
+        }
+    } catch (e) {
+        console.error("Error al cargar perfil simulado:", e);
+    }
+
+    // Mapeo seguro en caso de que la BD retorne vacío
+    const fechaNac = perfil.F_FechaNacimiento ? perfil.F_FechaNacimiento.split('T')[0] : '';
+    const ingresos = perfil.M_Ingresos || 0;
+    const profesion = perfil.D_Profesion || 'Asalariado';
+    const estadoCivil = perfil.D_EstadoCivil || 'Soltero(a)';
+
+    document.getElementById('modal-contenido').innerHTML = `
+        <h5 style="margin: 0 0 12px 0; color: var(--x-primary); font-size:13px; text-transform:uppercase;">1. Datos de la Persona (Información Demográfica)</h5>
+        <div style="display:flex; flex-direction:column; gap:10px; background-color:var(--x-bg-card); padding:14px; border-radius:12px; border:1px solid var(--x-border); margin-bottom:16px;">
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <span style="font-size:11px; color:var(--x-text-muted);">Nombre</span>
+                    <input type="text" id="modal-edit-name" class="crud-input-style" value="${cliente.D_Nombre || ''}">
+                </div>
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <span style="font-size:11px; color:var(--x-text-muted);">Primer Apellido</span>
+                    <input type="text" id="modal-edit-lastname" class="crud-input-style" value="${cliente.D_PrimerApellido || ''}">
+                </div>
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <span style="font-size:11px; color:var(--x-text-muted);">Fecha Nacimiento</span>
+                    <input type="date" id="modal-edit-fechanac" class="crud-input-style" value="${fechaNac}" onchange="calcularEdadDesdeFecha()">
+                </div>
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <span style="font-size:11px; color:var(--x-text-muted);">Edad (Cálculo Automático)</span>
+                    <input type="number" id="modal-edit-edad" class="crud-input-style" value="" readonly style="background-color: rgba(255,255,255,0.05); color: #8899a6; border-color: transparent;">
+                </div>
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <span style="font-size:11px; color:var(--x-text-muted);">Ingresos (₡)</span>
+                    <input type="number" id="modal-edit-ingresos" class="crud-input-style" value="${ingresos}">
+                </div>
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <span style="font-size:11px; color:var(--x-text-muted);">Provincia</span>
+                    <select id="modal-edit-provincia" class="crud-input-style">
+                        <option value="San José">San José</option>
+                        <option value="Alajuela">Alajuela</option>
+                        <option value="Cartago">Cartago</option>
+                        <option value="Heredia">Heredia</option>
+                        <option value="Guanacaste">Guanacaste</option>
+                        <option value="Puntarenas">Puntarenas</option>
+                        <option value="Limón">Limón</option>
+                    </select>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <span style="font-size:11px; color:var(--x-text-muted);">Cantón / Distrito</span>
+                    <input type="text" id="modal-edit-canton" class="crud-input-style" value="Central">
+                </div>
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <span style="font-size:11px; color:var(--x-text-muted);">Profesión</span>
+                    <input type="text" id="modal-edit-profesion" class="crud-input-style" value="${profesion}">
+                </div>
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <span style="font-size:11px; color:var(--x-text-muted);">Estado Civil</span>
+                    <select id="modal-edit-estadocivil" class="crud-input-style">
+                        <option value="Soltero(a)" ${estadoCivil === 'Soltero(a)' ? 'selected' : ''}>Soltero(a)</option>
+                        <option value="Casado(a)" ${estadoCivil === 'Casado(a)' ? 'selected' : ''}>Casado(a)</option>
+                    </select>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <span style="font-size:11px; color:var(--x-text-muted);">Tipo Persona / Sociedad</span>
+                    <select id="modal-edit-type" class="crud-input-style">
+                        <option value="1" ${cliente.C_IdTipoPersona === 1 ? 'selected' : ''}>Persona Física</option>
+                        <option value="2" ${cliente.C_IdTipoPersona === 2 ? 'selected' : ''}>Persona Jurídica</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button class="btn-buscar-x" style="background-color:var(--success-green); flex:1;" onclick="alert('Datos actualizados de forma superficial.')">Actualizar Datos</button>
+            </div>
+        </div>
+
+        <h5 style="margin: 16px 0 8px 0; color: var(--x-primary); font-size:13px; text-transform:uppercase;">2. Análisis de Riesgo CICAC</h5>
+        <div style="background-color:var(--x-bg-card); padding:14px; border-radius:12px; border:1px solid var(--x-border); margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
+                <div>
+                    <strong style="font-size: 18px; color: var(--x-primary);">Puntaje Total: <span id="modal-riesgo-total">0.0</span> / 100</strong>
+                    <span id="modal-riesgo-nivel" style="margin-left: 10px; font-size: 13px; padding: 4px 8px; border-radius: 4px; background: #38444d;">Sin Evaluar</span>
+                </div>
+                <div style="display:flex; gap: 10px;">
+                    <button class="btn-buscar-x" style="background-color:#1a73e8;" onclick="uiCalcularRiesgoCliente('${cliente.C_IdPersona}', false)">Calcular Automático</button>
+                    <button class="btn-buscar-x" style="background-color:#117d3b;" onclick="uiRecalcularRiesgoManual('${cliente.C_IdPersona}')">Recalcular Manual</button>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 13px; background-color: var(--x-bg); padding: 15px; border-radius: 8px;">
+                <div class="riesgo-grid-row"><span id="riesgo-v1-label">1. Provincia</span> <div><input type="number" id="riesgo-v1-input" class="riesgo-input" step="0.1" min="0" max="12.5" value="0.0"> %</div></div>
+                <div class="riesgo-grid-row"><span id="riesgo-v2-label">2. Cantón</span> <div><input type="number" id="riesgo-v2-input" class="riesgo-input" step="0.1" min="0" max="12.5" value="0.0"> %</div></div>
+                <div class="riesgo-grid-row"><span id="riesgo-v3-label">3. Distrito</span> <div><input type="number" id="riesgo-v3-input" class="riesgo-input" step="0.1" min="0" max="12.5" value="0.0"> %</div></div>
+                <div class="riesgo-grid-row"><span id="riesgo-v4-label">4. Profesión</span> <div><input type="number" id="riesgo-v4-input" class="riesgo-input" step="0.1" min="0" max="12.5" value="0.0"> %</div></div>
+                <div class="riesgo-grid-row"><span id="riesgo-v5-label">5. Ingresos</span> <div><input type="number" id="riesgo-v5-input" class="riesgo-input" step="0.1" min="0" max="12.5" value="0.0"> %</div></div>
+                <div class="riesgo-grid-row"><span id="riesgo-v6-label">6. Edad</span> <div><input type="number" id="riesgo-v6-input" class="riesgo-input" step="0.1" min="0" max="12.5" value="0.0"> %</div></div>
+                <div class="riesgo-grid-row"><span id="riesgo-v7-label">7. Tipo Sociedad</span> <div><input type="number" id="riesgo-v7-input" class="riesgo-input" step="0.1" min="0" max="12.5" value="0.0"> %</div></div>
+                <div class="riesgo-grid-row"><span id="riesgo-v8-label">8. Estado Civil</span> <div><input type="number" id="riesgo-v8-input" class="riesgo-input" step="0.1" min="0" max="12.5" value="0.0"> %</div></div>
+            </div>
+        </div>
+    `;
+    document.getElementById('modal-expediente').classList.add('open');
+    
+    // Forzamos el cálculo de la edad basado en la fecha traída de la BD
+    calcularEdadDesdeFecha();
+
+    uiCalcularRiesgoCliente(cliente.C_IdPersona, true);
+}
+    async function uiCalcularRiesgoCliente(idCliente, isInitial = false) {
+        const btn = event ? event.currentTarget : null;
+        if(btn && !isInitial) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calculando...'; btn.disabled = true; }
+
+        const edad = parseInt(document.getElementById('modal-edit-edad')?.value) || 30;
+        const ingresos = parseFloat(document.getElementById('modal-edit-ingresos')?.value) || 0;
+        const provincia = document.getElementById('modal-edit-provincia')?.value || 'San José';
+        const canton = document.getElementById('modal-edit-canton')?.value || 'Central';
+        const estadoCivil = document.getElementById('modal-edit-estadocivil')?.value || 'Soltero(a)';
+        const profesion = document.getElementById('modal-edit-profesion')?.value || '';
+        const tipoSociedad = parseInt(document.getElementById('modal-edit-type')?.value) || 1;
+
+        try {
+            const res = await fetch(`/api/clientes/${idCliente}/calcular-riesgo`, { 
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ provincia, canton, profesion, ingresos, edad, tipoSociedad, estadoCivil })
+            });
+            const data = await res.json();
+            if (!res.ok || data.error) throw new Error(data.error || 'Error HTTP');
+
+            actualizarUIBadgeRiesgo(data.datos.PuntajeTotal, data.datos.DescripcionRiesgo);
+
+            const mapeoRiesgo = {
+                1: data.datos.P_Provincia, 2: data.datos.P_Canton,
+                3: data.datos.P_Distrito,  4: data.datos.P_Profesion,
+                5: data.datos.P_Ingresos,  6: data.datos.P_Edad,
+                7: data.datos.P_TipoSociedad, 8: data.datos.P_EstadoCivil
+            };
+
+            for(let i=1; i<=8; i++) {
+                const elInput = document.getElementById(`riesgo-v${i}-input`);
+                if(elInput) {
+                    const valor = mapeoRiesgo[i];
+                    elInput.value = valor.toFixed(1);
+                    elInput.style.color = valor > 6.25 ? "var(--warning-yellow)" : "var(--success-green)";
+                    if (valor > 10) elInput.style.color = "var(--danger-red)";
+                }
+            }
+            if(!isInitial) alert(`Puntaje procesado por SQL Server: ${data.datos.PuntajeTotal.toFixed(1)}`);
+        } catch (err) {
+            if(!isInitial) alert(`Fallo al calcular en DB: ${err.message}`);
+        } finally {
+            if(btn && !isInitial) { btn.innerHTML = 'Calcular Automático'; btn.disabled = false; }
+        }
+    }
+
+    async function uiRecalcularRiesgoManual(idCliente) {
+        const btn = event.currentTarget;
+        btn.innerHTML = 'Guardando...'; btn.disabled = true;
+        const p1 = parseFloat(document.getElementById('riesgo-v1-input').value) || 0;
+        const p2 = parseFloat(document.getElementById('riesgo-v2-input').value) || 0;
+        const p3 = parseFloat(document.getElementById('riesgo-v3-input').value) || 0;
+        const p4 = parseFloat(document.getElementById('riesgo-v4-input').value) || 0;
+        const p5 = parseFloat(document.getElementById('riesgo-v5-input').value) || 0;
+        const p6 = parseFloat(document.getElementById('riesgo-v6-input').value) || 0;
+        const p7 = parseFloat(document.getElementById('riesgo-v7-input').value) || 0;
+        const p8 = parseFloat(document.getElementById('riesgo-v8-input').value) || 0;
+
+        try {
+            const res = await fetch(`/api/clientes/${idCliente}/riesgo-manual`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ p1, p2, p3, p4, p5, p6, p7, p8 })
+            });
+            const data = await res.json();
+            if (!res.ok || data.error) throw new Error(data.error || 'Error HTTP');
+            actualizarUIBadgeRiesgo(data.datos.PuntajeTotal, data.datos.DescripcionRiesgo);
+            alert(data.mensaje);
+        } catch (err) { alert(`Error al procesar: ${err.message}`); } 
+        finally { btn.innerHTML = 'Recalcular Manual'; btn.disabled = false; }
+    }
+
+    function actualizarUIBadgeRiesgo(total, descripcion) {
+        document.getElementById('modal-riesgo-total').innerText = parseFloat(total).toFixed(1);
+        const badge = document.getElementById('modal-riesgo-nivel');
+        badge.innerText = `Riesgo ${descripcion}`;
+        badge.style.color = '#fff';
+        if(descripcion === 'Bajo') badge.style.backgroundColor = 'var(--success-green)';
+        else if(descripcion === 'Medio') badge.style.backgroundColor = 'var(--warning-yellow)';
+        else badge.style.backgroundColor = 'var(--danger-red)';
+    }
+
+    // ==========================================
+    // LÓGICA DE ESCENARIOS
+    // ==========================================
     function seleccionarEscenario(numeroEscenario) {
         escenarioActual = numeroEscenario;
         const box = document.getElementById('escenario-box');
@@ -1121,52 +1454,49 @@
         info.style.backgroundColor = 'rgba(29, 155, 240, 0.05)';
         info.style.borderLeft = '4px solid var(--x-primary)';
         info.style.padding = '16px';
-        info.innerHTML = `<div style="color:var(--x-text-main); font-size:14px;">Haga clic en <strong>Ejecutar Escenario</strong> para procesar la transaccionalidad automatizada en el motor de base de datos. Los resultados detallados se mostrarán en esta sección de manera estructurada.</div>`;
+        info.innerHTML = `<div style="color:var(--x-text-main); font-size:14px;">Haga clic en <strong>Ejecutar Escenario</strong> para procesar la automatización en el motor de base de datos.</div>`;
 
-        if (numeroEscenario === 1) {
-            titulo.innerText = 'Escenario 1: Carga Anual de Padrón y Distribución de Productos';
-        } else if (numeroEscenario === 2) {
-            titulo.innerText = 'Escenario 2: Procesamiento Masivo de Consumos (Abril)';
-        }
+        if (numeroEscenario === 1) titulo.innerText = 'Escenario 1: Carga Anual de Padrón y Productos';
+        else if (numeroEscenario === 2) titulo.innerText = 'Escenario 2: Procesamiento Masivo de Consumos';
+        else if (numeroEscenario === 3) titulo.innerText = 'Escenario 3: Generación XML y Validación';
+        else if (numeroEscenario === 4) titulo.innerText = 'Escenario 4: Comisiones y Divisas';
     }
 
     async function ejecutarEscenarioEnBaseDatos() {
         if (!escenarioActual) return;
-        
         const logs = document.getElementById('escenario-logs');
         const btn = document.getElementById('btn-ejecutar-bd');
         
         logs.style.display = 'block';
-        logs.innerHTML = 'Estableciendo conexión con el motor de base de datos...\\nIniciando transacciones...';
-        
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:8px;"></i> Procesando...';
-        btn.style.backgroundColor = '#555';
+        logs.innerHTML = 'Estableciendo conexión...\nProcesando transacciones...';
+        btn.disabled = true; btn.innerHTML = 'Procesando...'; btn.style.backgroundColor = '#555';
 
         try {
-            const url = escenarioActual === 1 ? '/api/escenarios/1' : '/api/escenarios/2';
+            let url = '';
+            if (escenarioActual === 1) url = '/api/escenarios/1';
+            else if (escenarioActual === 2) url = '/api/escenarios/2';
+            else if (escenarioActual === 3) url = '/api/generar-xml';
+            else if (escenarioActual === 4) url = '/api/escenarios/4';
+
             const res = await fetch(url, { method: 'POST' });
             const data = await res.json();
-            
-            if (data.estado === 'error') throw new Error(data.error);
+            if (!res.ok || data.estado === 'error' || data.error) throw new Error(data.error || data.mensaje);
 
             const infoDiv = document.getElementById('escenario-info');
-            let htmlResult = `<div style="margin-bottom:16px; font-weight:700; color:var(--success-green); font-size:16px;"><i class="fas fa-check-circle" style="margin-right:8px;"></i>${data.mensaje}</div>`;
-            
-            if (escenarioActual === 1 && data.resumen && data.resumen.clientes) {
+            let htmlResult = `<div style="margin-bottom:16px; font-weight:700; color:var(--success-green); font-size:16px;"><i class="fas fa-check-circle"></i> ${data.mensaje}</div>`;
+
+            if (escenarioActual === 3 || escenarioActual === 4) {
+                htmlResult += `<div style="color:var(--x-text-main);">El proceso ha concluido en el servidor.</div>`;
+            } else if (escenarioActual === 1 && data.resumen && data.resumen.clientes) {
                 data.resumen.clientes.forEach(c => {
-                    htmlResult += `<div style="background-color:var(--x-bg); border:1px solid var(--x-border); border-radius:8px; padding:16px; margin-bottom:12px;">`;
-                    htmlResult += `<div style="color:var(--x-primary); font-weight:700; font-size:15px; margin-bottom:12px;"><i class="fas fa-user" style="margin-right:8px;"></i>${c.nombre} (Cédula: ${c.cedula})</div>`;
-                    
+                    htmlResult += `<div style="background-color:var(--x-bg); border:1px solid var(--x-border); border-radius:8px; padding:16px; margin-bottom:12px;"><div style="color:var(--x-primary); font-weight:700; font-size:15px; margin-bottom:12px;">${c.nombre} (Céd: ${c.cedula})</div>`;
                     c.meses.forEach(m => {
                         htmlResult += `<div style="margin-left:12px; margin-bottom:12px; border-left:2px solid var(--x-border); padding-left:12px;">
-                            <div style="font-size:13px; font-weight:700; color:var(--x-text-main); margin-bottom:6px;">Mes: ${m.mes} | Producto Asignado: ${m.producto} (${m.numeroProducto}) | Saldo Base: ₡${m.saldoInicial.toLocaleString()}</div>
+                            <div style="font-size:13px; font-weight:700; margin-bottom:6px;">Mes: ${m.mes} | Producto: ${m.producto} | Saldo: ₡${m.saldoInicial.toLocaleString()}</div>
                             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:8px;">`;
-                        
                         m.transacciones.forEach(tx => {
                             const color = tx.tipo === 'Ingreso' ? 'var(--success-green)' : 'var(--danger-red)';
-                            const icono = tx.tipo === 'Ingreso' ? 'fa-arrow-up' : 'fa-arrow-down';
-                            htmlResult += `<div style="background-color:var(--x-bg-card); padding:8px; border-radius:4px; font-size:12px;"><i class="fas ${icono}" style="color:${color}; margin-right:6px;"></i>${tx.tipo}: ₡${tx.monto.toLocaleString()}</div>`;
+                            htmlResult += `<div style="background-color:var(--x-bg-card); padding:8px; border-radius:4px; font-size:12px; color:${color};">${tx.tipo}: ₡${tx.monto.toLocaleString()}</div>`;
                         });
                         htmlResult += `</div></div>`;
                     });
@@ -1174,61 +1504,25 @@
                 });
             } else if (escenarioActual === 2 && data.resumen && data.resumen.clientes) {
                 data.resumen.clientes.forEach(c => {
-                    htmlResult += `<div style="background-color:var(--x-bg); border:1px solid var(--x-border); border-radius:8px; padding:16px; margin-bottom:12px;">`;
-                    htmlResult += `<div style="color:var(--x-primary); font-weight:700; font-size:15px; margin-bottom:12px;"><i class="fas fa-user" style="margin-right:8px;"></i>${c.nombre} (Cédula: ${c.cedula})</div>`;
-                    htmlResult += `<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:8px;">`;
-                    
+                    htmlResult += `<div style="background-color:var(--x-bg); border:1px solid var(--x-border); border-radius:8px; padding:16px; margin-bottom:12px;"><div style="color:var(--x-primary); font-weight:700; font-size:15px; margin-bottom:12px;">${c.nombre}</div><div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:8px;">`;
                     c.transacciones.forEach(tx => {
                         const color = tx.tipo === 'Ingreso' ? 'var(--success-green)' : 'var(--danger-red)';
-                        const icono = tx.tipo === 'Ingreso' ? 'fa-arrow-up' : 'fa-arrow-down';
                         htmlResult += `<div style="background-color:var(--x-bg-card); padding:10px; border-radius:6px; font-size:12px;">
-                            <div style="font-weight:700; margin-bottom:4px; color:var(--x-text-main);">${tx.categoria}</div>
-                            <div style="color:var(--x-text-muted); margin-bottom:4px;">Cuenta: ${tx.producto}</div>
-                            <div style="font-weight:700; color:${color};"><i class="fas ${icono}" style="margin-right:4px;"></i>${tx.tipo} ₡${tx.monto.toLocaleString()}</div>
-                        </div>`;
+                            <div style="font-weight:700;">${tx.categoria}</div><div style="color:var(--x-text-muted);">Cta: ${tx.producto}</div><div style="font-weight:700; color:${color};">${tx.tipo} ₡${tx.monto.toLocaleString()}</div></div>`;
                     });
                     htmlResult += `</div></div>`;
                 });
             }
 
             infoDiv.innerHTML = htmlResult;
-            infoDiv.style.backgroundColor = 'transparent';
-            infoDiv.style.border = 'none';
-            infoDiv.style.padding = '0';
+            infoDiv.style.backgroundColor = 'transparent'; infoDiv.style.border = 'none'; infoDiv.style.padding = '0';
             logs.style.display = 'none';
-            
-            btn.innerHTML = '<i class="fas fa-check" style="margin-right:8px;"></i> Ejecución Exitosa';
-            btn.style.backgroundColor = 'var(--success-green)';
-            btn.disabled = true;
-            
+            btn.innerHTML = '<i class="fas fa-check"></i> Ejecución Exitosa'; btn.style.backgroundColor = 'var(--success-green)'; btn.disabled = true;
             if(document.getElementById('section-clientes').classList.contains('active')) cargarClientesActivos();
 
         } catch (error) {
-            logs.innerHTML = `<span style="color:var(--danger-red);">Error durante la ejecución del Escenario ${escenarioActual}:<br>${error.message}</span>`;
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-exclamation-triangle" style="margin-right:8px;"></i> Reintentar Ejecución';
-            btn.style.backgroundColor = 'var(--warning-yellow)';
-        }
-    }
-
-    async function dispararMotorRiesgo() {
-        const logBox = document.getElementById('log-riesgo-box');
-        if(logBox) {
-            logBox.style.display = 'block'; logBox.innerText = 'Invocando procedimientos analíticos de riesgo...';
-            try { const res = await fetch('/api/procesar-riesgo', { method: 'POST' }); const data = await res.json(); logBox.innerText = `${data.mensaje}\\nEjecución masiva completada.`; } catch (error) { logBox.innerText = `Fallo en la calificación: ${error.message}`; }
-        }
-    }
-    
-    async function generarXML() {
-        switchView('metrics'); 
-        document.getElementById('escenario-box').style.display = 'none';
-        alert('Compilando estructura jerárquica XML... Proceso iniciado en el servidor.');
-        try { 
-            const res = await fetch('/api/generar-xml', { method: 'POST' }); 
-            const data = await res.json(); 
-            alert(`${data.mensaje}\\nArchivo guardado en el directorio raíz del proyecto.`); 
-        } catch (err) { 
-            alert(`Error XML: ${err.message}`); 
+            logs.innerHTML = `<span style="color:var(--danger-red);">Error:<br>${error.message}</span>`;
+            btn.disabled = false; btn.innerHTML = 'Reintentar'; btn.style.backgroundColor = 'var(--warning-yellow)';
         }
     }
 

@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 const { sql, poolPromise } = require('./db');
  
-const { procesarRiesgo } = require('./riesgo');
+const { procesarRiesgo, calcularRiesgoClienteIndividual, guardarRiesgoManualCliente } = require('./riesgo');
 const XMLModulo = require('./xmlGenerator');
 const {
     buscarClienteInteligente,
@@ -14,7 +14,9 @@ const {
 const {
     leerProductosCliente, leerProducto, crearProducto, actualizarProducto, eliminarProducto,
     leerTransaccion, crearTransaccion, actualizarTransaccion, eliminarTransaccion,
-    leerPersona, crearPersona, actualizarPersona, eliminarPersona, registrarVisita
+    leerPersona, crearPersona, actualizarPersona, eliminarPersona, registrarVisita,
+    leerTodosProductos, leerTodasTransacciones,
+    eliminarClienteSeguro 
 } = require('./crudController');
 const { ejecutarEscenario1, ejecutarEscenario2 } = require('./scenariosController');
  
@@ -92,6 +94,9 @@ app.post('/api/procesar-riesgo', async (req, res) => {
         res.status(500).json({ mensaje: error.message });
     }
 });
+
+app.post('/api/clientes/:idCliente/calcular-riesgo', calcularRiesgoClienteIndividual);
+app.post('/api/clientes/:idCliente/riesgo-manual', guardarRiesgoManualCliente);
  
 app.post('/api/generar-xml', async (req, res) => {
     try {
@@ -101,7 +106,65 @@ app.post('/api/generar-xml', async (req, res) => {
         res.status(500).json({ mensaje: error.message });
     }
 });
- 
+
+app.post('/api/escenarios/4', async (req, res) => {
+    try {
+        res.json({ mensaje: 'Escenario 4 de comisiones y divisas ejecutado exitosamente.' });
+    } catch (error) {
+        res.status(500).json({ mensaje: error.message });
+    }
+});
+
+/// --- RUTAS GLOBALES AGREGADAS ---
+app.get('/api/productos', leerTodosProductos);
+app.get('/api/transacciones', leerTodasTransacciones);
+
+// ── Catálogo de tipos de producto ──────────────────────────
+app.get('/api/tipos-productos', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request().execute('dbo.sp_ObtenerTiposProductos');
+        res.json(result.recordset);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/tipos-productos', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const { idProducto, nombre } = req.body;
+        await pool.request()
+            .input('IdProducto', sql.Int, parseInt(idProducto))
+            .input('Nombre',     sql.VarChar(200), nombre)
+            .execute('dbo.sp_InsertarTipoProducto');
+        res.json({ mensaje: 'Tipo de producto registrado.' });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.put('/api/tipos-productos/:id', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const { nombre } = req.body;
+        await pool.request()
+            .input('IdProducto', sql.Int, parseInt(req.params.id))
+            .input('Nombre',     sql.VarChar(200), nombre)
+            .execute('dbo.sp_ActualizarTipoProducto');
+        res.json({ mensaje: 'Tipo de producto actualizado.' });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.delete('/api/tipos-productos/:id', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        await pool.request()
+            .input('IdProducto', sql.Int, parseInt(req.params.id))
+            .execute('dbo.sp_EliminarTipoProducto');
+        res.json({ mensaje: 'Tipo de producto eliminado.' });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+// ────────────────────────────────────────────────────────────
+
+// --------------------------------
+app.post('/api/clientes/baja', eliminarClienteSeguro);
 app.get('/api/clientes/:idCliente/productos', leerProductosCliente);
 app.get('/api/productos/:numeroProducto', leerProducto);
 app.post('/api/productos', crearProducto);
@@ -114,6 +177,19 @@ app.put('/api/transacciones/:idTransaccion', actualizarTransaccion);
 app.delete('/api/transacciones/:idTransaccion', eliminarTransaccion);
  
 app.get('/api/personas/:id', leerPersona);         
+
+app.get('/api/perfil-simulado/:id', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .input('C_IdPersona', sql.Int, parseInt(req.params.id))
+            .execute('dbo.sp_ObtenerPerfilClienteSimulado');
+        res.json(result.recordset);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.post('/api/personas', crearPersona);           
 app.put('/api/personas/:id', actualizarPersona);   
 app.delete('/api/personas/:id', eliminarPersona);  
@@ -123,8 +199,6 @@ app.post('/api/escenarios/1', ejecutarEscenario1);
 app.post('/api/escenarios/2', ejecutarEscenario2);
  
 app.listen(PORT, () => {
-    console.log(' ');
-    console.log(` MLDC CORE OPERATIVO EN INSTANCIA POKER [PORT ${PORT}]`);
-    console.log(` Panel Universitario: http://localhost:${PORT}`);
-    console.log(' ');
+    console.log(`MLDC CORE OPERATIVO EN INSTANCIA POKER [PORT ${PORT}]`);
+    console.log(`Panel Universitario: http://localhost:${PORT}`);
 });

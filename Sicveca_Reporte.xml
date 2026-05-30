@@ -7,7 +7,7 @@
       <TipoDependencia>Oficinas Centrales</TipoDependencia>
       <NombreDependencia>Sede Principal</NombreDependencia>
       <TipoRiesgoCliente>Moderado</TipoRiesgoCliente>
-      <CantidadClientes>50</CantidadClientes>
+      <CantidadClientes>0</CantidadClientes>
       <TipoRiesgoDependencia>Bajo</TipoRiesgoDependencia>
     </ElementoZonaGeografica>
   </ListaZonaGeografica>
@@ -16,14 +16,14 @@
       <Mes>5</Mes>
       <TipoMovimiento>1</TipoMovimiento>
       <TipoEntradaSalidaFondos>1</TipoEntradaSalidaFondos>
-      <MontoTotal>379863.75</MontoTotal>
+      <MontoTotal>20005388.50</MontoTotal>
       <CodigoPaisISO>CRI</CodigoPaisISO>
     </ElementoTransferenciasRemesas>
     <ElementoTransferenciasRemesas>
       <Mes>5</Mes>
       <TipoMovimiento>2</TipoMovimiento>
       <TipoEntradaSalidaFondos>1</TipoEntradaSalidaFondos>
-      <MontoTotal>3018837.59</MontoTotal>
+      <MontoTotal>24685917.80</MontoTotal>
       <CodigoPaisISO>CRI</CodigoPaisISO>
     </ElementoTransferenciasRemesas>
   </ListaTransferenciasRemesas>
