@@ -240,9 +240,42 @@
                 </button>
             </div>
         </div>
+
+        <div class="search-container" style="margin-bottom: 20px;">
+            <div class="search-wrapper-x">
+                <i class="fas fa-search"></i>
+                <input type="text" id="input-busqueda-activos" class="g-input-x" placeholder="Buscar cliente activo por cédula o nombre..." oninput="manejarAutocompletadoActivos()" onkeydown="if(event.key === 'Enter') buscarClientesActivos()">
+                <button class="btn-buscar-x" onclick="buscarClientesActivos()">Buscar</button>
+            </div>
+            
+            <div id="geo-filters-activos-container" style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                    <select id="select-provincia-activos" class="crud-input-style" style="width: 100%; padding: 12px;" onchange="manejarCambioProvinciaActivos()">
+                        <option value="">Provincia</option>
+                    </select>
+                    <select id="select-canton-activos" class="crud-input-style" style="width: 100%; padding: 12px;" onchange="manejarCambioCantonActivos()">
+                        <option value="">Cantón</option>
+                    </select>
+                    <select id="select-distrito-activos" class="crud-input-style" style="width: 100%; padding: 12px;" onchange="buscarClientesActivos()">
+                        <option value="">Distrito</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                    <button class="btn-buscar-x" style="background-color: #117d3b; padding: 10px 20px; border-radius: 8px;" onclick="buscarClientesActivos()">
+                        <i class="fas fa-filter" style="margin-right: 5px;"></i> Filtrar
+                    </button>
+                    <button class="btn-buscar-x" style="background-color: var(--danger-red); padding: 10px 20px; border-radius: 8px;" onclick="limpiarFiltrosGeoActivos()">
+                        <i class="fas fa-eraser" style="margin-right: 5px;"></i> Limpiar
+                    </button>
+                </div>
+            </div>
+
+            <div id="dropdown-autocompletar-activos" class="autocomplete-dropdown"></div>
+        </div>
+
         <div id="feed-clientes-activos"></div>
     </div>
-
     <div id="section-transacciones" class="view-section">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--x-border); padding-bottom: 16px; margin-bottom: 20px;">
             <div>
@@ -252,6 +285,16 @@
                 <i class="fas fa-plus" style="margin-right:5px;"></i> Registrar Transacción
             </button>
         </div>
+
+        <div class="search-container" style="margin-bottom: 20px;">
+            <div class="search-wrapper-x">
+                <i class="fas fa-search"></i>
+                <input type="text" id="input-busqueda-transacciones" class="g-input-x" placeholder="Buscar por ID de Tx, N° de producto o nombre de titular..." oninput="manejarAutocompletadoTransacciones()" onkeydown="if(event.key === 'Enter') buscarGlobalTransacciones()">
+                <button class="btn-buscar-x" onclick="buscarGlobalTransacciones()">Buscar</button>
+            </div>
+            <div id="dropdown-autocompletar-transacciones" class="autocomplete-dropdown"></div>
+        </div>
+
         <div style="background-color:var(--x-bg-card); border-radius:12px; border:1px solid var(--x-border); padding:16px; overflow-x:auto;">
             <table class="product-sub-table" style="width:100%;">
                 <thead>
@@ -264,7 +307,9 @@
                         <th style="text-align:right;">Acciones</th>
                     </tr>
                 </thead>
-                <tbody id="lista-global-transacciones-body"></tbody>
+                <tbody id="lista-global-transacciones-body">
+                    <tr><td colspan="6" style="text-align:center;">Cargando historial...</td></tr>
+                </tbody>
             </table>
         </div>
     </div>
@@ -324,7 +369,7 @@
         </div>
     </div>
 
-    <div id="section-productos" class="view-section">
+   <div id="section-productos" class="view-section">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--x-border); padding-bottom: 16px; margin-bottom: 20px;">
             <div>
                 <h3 style="margin:0 0 5px 0;">Administración Global de Productos</h3>
@@ -334,22 +379,70 @@
             </button>
         </div>
 
+        <div class="search-container" style="margin-bottom: 20px;">
+            <div class="search-wrapper-x">
+                <i class="fas fa-search"></i>
+                <input type="text" id="input-busqueda-productos" class="g-input-x" placeholder="Buscar producto por N° de producto, titular o cédula..." oninput="manejarAutocompletadoProductos()" onkeydown="if(event.key === 'Enter') buscarGlobalProductos()">
+                <button class="btn-buscar-x" onclick="buscarGlobalProductos()">Buscar</button>
+            </div>
+            <div id="dropdown-autocompletar-productos" class="autocomplete-dropdown"></div>
+        </div>
+
         <div style="background-color:var(--x-bg-card); border-radius:12px; border:1px solid var(--x-border); padding:16px; overflow-x:auto;">
             <table class="product-sub-table" style="width:100%;">
                 <thead>
                     <tr style="text-align:left;">
                         <th>N° Producto</th>
-                        <th>Nombre de Producto</th> <th>Tipo XML</th>
+                        <th>Nombre de Producto</th> 
+                        <th>Titular</th>
+                        <th>Tipo XML</th>
                         <th style="text-align:right;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="lista-global-productos-body">
-                    <tr><td colspan="4" style="text-align:center;">Cargando catálogo...</td></tr>
+                    <tr><td colspan="5" style="text-align:center;">Cargando catálogo...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
+    <div id="section-transacciones" class="view-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--x-border); padding-bottom: 16px; margin-bottom: 20px;">
+            <div>
+                <h3 style="margin:0 0 5px 0;">Auditoría de Transacciones</h3>
+            </div>
+            <button class="btn-buscar-x" style="background-color: var(--success-green); padding: 10px 16px;" onclick="abrirModalTransaccionGlobal()">
+                <i class="fas fa-plus" style="margin-right:5px;"></i> Registrar Transacción
+            </button>
+        </div>
+
+        <div class="search-container" style="margin-bottom: 20px;">
+            <div class="search-wrapper-x">
+                <i class="fas fa-search"></i>
+                <input type="text" id="input-busqueda-transacciones" class="g-input-x" placeholder="Buscar por ID de Tx, N° de producto o nombre de titular..." oninput="manejarAutocompletadoTransacciones()" onkeydown="if(event.key === 'Enter') buscarGlobalTransacciones()">
+                <button class="btn-buscar-x" onclick="buscarGlobalTransacciones()">Buscar</button>
+            </div>
+            <div id="dropdown-autocompletar-transacciones" class="autocomplete-dropdown"></div>
+        </div>
+
+        <div style="background-color:var(--x-bg-card); border-radius:12px; border:1px solid var(--x-border); padding:16px; overflow-x:auto;">
+            <table class="product-sub-table" style="width:100%;">
+                <thead>
+                    <tr style="text-align:left;">
+                        <th>ID Tx</th>
+                        <th>N° Producto</th>
+                        <th>Nombre Titular</th>
+                        <th>Sentido</th>
+                        <th>Monto (₡)</th>
+                        <th style="text-align:right;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-global-transacciones-body">
+                    <tr><td colspan="6" style="text-align:center;">Cargando historial...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
     <!-- ══════════════════════════════════════════════════════ -->
     <!-- CATÁLOGO DE TIPOS DE PRODUCTO                         -->
     <!-- ══════════════════════════════════════════════════════ -->
@@ -362,6 +455,15 @@
             <button class="btn-buscar-x" style="background-color: var(--success-green); padding: 10px 16px;" onclick="abrirModalCatalogo()">
                 <i class="fas fa-plus" style="margin-right:5px;"></i> Agregar Tipo
             </button>
+        </div>
+
+        <div class="search-container" style="margin-bottom: 20px;">
+            <div class="search-wrapper-x">
+                <i class="fas fa-search"></i>
+                <input type="text" id="input-busqueda-catalogo" class="g-input-x" placeholder="Buscar por Tipo XML o nombre..." oninput="manejarAutocompletadoCatalogo()" onkeydown="if(event.key === 'Enter') buscarCatalogo()">
+                <button class="btn-buscar-x" onclick="buscarCatalogo()">Buscar</button>
+            </div>
+            <div id="dropdown-autocompletar-catalogo" class="autocomplete-dropdown"></div>
         </div>
 
         <div style="background-color:var(--x-bg-card); border-radius:12px; border:1px solid var(--x-border); padding:16px; overflow-x:auto;">
@@ -616,7 +718,7 @@
     </div>
 </div>
 
-<script>
++<script>
     let cacheClientes = [];     
     let cacheClientesActivos = []; 
     let historialAbiertos = [];  
@@ -634,6 +736,7 @@
 
     window.onload = function() {
         cargarProvincias();
+        cargarProvinciasActivos(); 
     };
 
     function switchView(viewName) {
@@ -710,38 +813,85 @@
     // ==========================================
     // LÓGICA DE GESTIÓN GLOBAL - PRODUCTOS
     // ==========================================
+    // ==========================================
+    // BUSCADOR Y LÓGICA DE PRODUCTOS (100% SQL)
+    // ==========================================
+    let debounceTimerProductos;
+
+    async function manejarAutocompletadoProductos() {
+        const termino = document.getElementById('input-busqueda-productos').value.trim();
+        const dropdown = document.getElementById('dropdown-autocompletar-productos');
+
+        if (termino.length < 2) {
+            dropdown.style.display = 'none'; 
+            return;
+        }
+
+        clearTimeout(debounceTimerProductos);
+        debounceTimerProductos = setTimeout(async () => {
+            try {
+                const res = await fetch(`/api/productos?termino=${encodeURIComponent(termino)}`);
+                const coincidencias = await res.json();
+
+                if (!coincidencias || coincidencias.length === 0) { 
+                    dropdown.style.display = 'none'; 
+                    return; 
+                }
+
+                const maxResults = coincidencias.slice(0, 6);
+                dropdown.innerHTML = '';
+                maxResults.forEach(p => {
+                    dropdown.innerHTML += `<div class="autocomplete-item" onclick="seleccionarDesdeAutocompletarProductos('${p.D_NumeroProducto}')"><div class="details"><span class="main-name">${p.D_NumeroProducto}</span><span class="sub-id">${p.NombreCliente || 'Sin asignar'} (Céd: ${p.C_IdPersona})</span></div></div>`;
+                });
+                dropdown.style.display = 'block';
+            } catch (err) { console.error('Error de autocompletado:', err); }
+        }, 400); 
+    }
+
+    function seleccionarDesdeAutocompletarProductos(numeroProducto) {
+        document.getElementById('input-busqueda-productos').value = numeroProducto;
+        document.getElementById('dropdown-autocompletar-productos').style.display = 'none';
+        buscarGlobalProductos();
+    }
+
+    function buscarGlobalProductos() {
+        document.getElementById('dropdown-autocompletar-productos').style.display = 'none';
+        cargarListaGlobalProductos();
+    }
+
     async function cargarListaGlobalProductos() {
         const tbody = document.getElementById('lista-global-productos-body');
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>';
+        const terminoInput = document.getElementById('input-busqueda-productos');
+        const termino = terminoInput ? terminoInput.value.trim() : '';
+
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Consultando al motor SQL...</td></tr>';
         
         try {
-            const res = await fetch('/api/productos');
+            let url = '/api/productos';
+            if (termino) url += `?termino=${encodeURIComponent(termino)}`;
+
+            const res = await fetch(url);
             const data = await res.json();
             
             if(!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No hay productos registrados.</td></tr>'; 
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No hay productos registrados o que coincidan con la búsqueda.</td></tr>'; 
                 return;
             }
 
             tbody.innerHTML = data.map(p => `
                 <tr style="border-bottom:1px solid rgba(56, 68, 77, 0.4);">
                     <td style="font-family:monospace; color:var(--x-primary); padding:10px 6px;">${p.D_NumeroProducto}</td>
-                    
-                    <td style="color:var(--success-green); font-weight:500;">${p.NombreProducto}</td>
-                    
+                    <td style="color:var(--success-green); font-weight:500;">${p.NombreProducto || 'Instrumento'}</td>
                     <td>${p.NombreCliente || 'No asignado'} <br><span style="font-size:11px;color:var(--x-text-muted);">Céd: ${p.C_IdPersona}</span></td>
-                    
                     <td><span style="background-color:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px; font-size:12px;">Tipo XML: ${p.C_TipoProducto}</span></td>
-                    
                     <td style="text-align:right;">
                         <button class="btn-buscar-x" style="background-color:#1a73e8; padding:6px 10px; font-size:12px;" onclick="abrirModalProductoGlobal('${p.D_NumeroProducto}', '${p.C_IdPersona}', ${p.C_TipoProducto}, ${p.M_Saldo})"><i class="fas fa-edit"></i> Editar</button>
                         <button class="btn-buscar-x" style="background-color:var(--danger-red); padding:6px 10px; font-size:12px;" onclick="abrirModalBajaProducto('${p.D_NumeroProducto}')"><i class="fas fa-trash"></i> Eliminar</button>
                     </td>
                 </tr>
             `).join('');
-
         } catch (e) { 
-            tbody.innerHTML = `<tr><td colspan="4" style="color:red;">Error: ${e.message}</td></tr>`; 
+            tbody.innerHTML = `<tr><td colspan="5" style="color:var(--danger-red); text-align:center;">Error: ${e.message}</td></tr>`; 
         }
     }
 
@@ -802,19 +952,80 @@
         } catch(e) { alert("Error al eliminar: " + e.message); }
     }
 
+
     // ==========================================
-    // LÓGICA DE CATÁLOGO DE TIPOS DE PRODUCTO
+    // BUSCADOR Y LÓGICA DE CATÁLOGO 
     // ==========================================
+    let debounceTimerCatalogo;
+
+    async function manejarAutocompletadoCatalogo() {
+        const termino = document.getElementById('input-busqueda-catalogo').value.trim();
+        const dropdown = document.getElementById('dropdown-autocompletar-catalogo');
+
+        if (termino.length < 1) {
+            dropdown.style.display = 'none'; 
+            return;
+        }
+
+        clearTimeout(debounceTimerCatalogo);
+        debounceTimerCatalogo = setTimeout(async () => {
+            try {
+                // Consulta directa al backend/SQL por cada pulsación
+                const res = await fetch(`/api/tipos-productos?termino=${encodeURIComponent(termino)}`);
+                const coincidencias = await res.json();
+
+                if (!coincidencias || coincidencias.length === 0) { 
+                    dropdown.style.display = 'none'; 
+                    return; 
+                }
+
+                dropdown.innerHTML = '';
+                const maxResults = coincidencias.slice(0, 6);
+                maxResults.forEach(c => {
+                    dropdown.innerHTML += `<div class="autocomplete-item" onclick="seleccionarDesdeAutocompletarCatalogo('${c.IdProducto}')"><div class="details"><span class="main-name">${c.Nombre}</span><span class="sub-id">Tipo XML: ${c.IdProducto}</span></div></div>`;
+                });
+                dropdown.style.display = 'block';
+            } catch (err) { console.error('Error autocompletado catálogo:', err); }
+        }, 400); 
+    }
+
+    function seleccionarDesdeAutocompletarCatalogo(idTipo) {
+        document.getElementById('input-busqueda-catalogo').value = idTipo;
+        document.getElementById('dropdown-autocompletar-catalogo').style.display = 'none';
+        buscarCatalogo();
+    }
+
+    function buscarCatalogo() {
+        document.getElementById('dropdown-autocompletar-catalogo').style.display = 'none';
+        cargarCatalogo();
+    }
+
     async function cargarCatalogo() {
         const tbody = document.getElementById('lista-catalogo-body');
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>';
+        const terminoInput = document.getElementById('input-busqueda-catalogo');
+        const termino = terminoInput ? terminoInput.value.trim() : '';
+
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Consultando al motor SQL...</td></tr>';
+        
         try {
-            const res = await fetch('/api/tipos-productos');
-            const data = await res.json();
+            let url = '/api/tipos-productos';
+            if (termino) url += `?termino=${encodeURIComponent(termino)}`;
+
+            const res = await fetch(url);
+            let data = await res.json();
+
+            if (termino && data && data.length > 0) {
+                const exacto = data.filter(c => String(c.IdProducto) === termino);
+                if (exacto.length > 0) {
+                    data = exacto;
+                }
+            }
+
             if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--x-text-muted);">No hay tipos registrados.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--x-text-muted);">No hay tipos registrados o que coincidan con la búsqueda.</td></tr>';
                 return;
             }
+
             tbody.innerHTML = data.map(p => `
                 <tr style="border-bottom:1px solid rgba(56,68,77,0.4);">
                     <td style="padding:12px 6px;">
@@ -855,17 +1066,22 @@
         const modo = document.getElementById('cat-modo').value;
         const id   = document.getElementById('cat-id').value.trim();
         const nombre = document.getElementById('cat-nombre').value.trim();
+        
         if (!id || !nombre) return alert('El Tipo XML y el Nombre son obligatorios.');
+        
         try {
             const url    = modo === 'EDIT' ? `/api/tipos-productos/${id}` : '/api/tipos-productos';
             const method = modo === 'EDIT' ? 'PUT' : 'POST';
+            
             const res = await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ idProducto: id, nombre })
             });
+            
             const data = await res.json();
             if (data.error) throw new Error(data.error);
+            
             alert(data.mensaje || 'Operación exitosa.');
             cerrarModalCatalogo();
             cargarCatalogo();
@@ -878,23 +1094,99 @@
             const res = await fetch(`/api/tipos-productos/${id}`, { method: 'DELETE' });
             const data = await res.json();
             if (data.error) throw new Error(data.error);
+            
             alert(data.mensaje || 'Tipo eliminado.');
             cargarCatalogo();
         } catch (e) { alert('Error al eliminar: ' + e.message); }
     }
 
     // ==========================================
-    // LÓGICA DE GESTIÓN GLOBAL - TRANSACCIONES
+    // BUSCADOR Y LÓGICA DE TRANSACCIONES 
     // ==========================================
+    let debounceTimerTransacciones;
+
+    async function manejarAutocompletadoTransacciones() {
+        const termino = document.getElementById('input-busqueda-transacciones').value.trim();
+        const dropdown = document.getElementById('dropdown-autocompletar-transacciones');
+
+        if (termino.length < 2) {
+            dropdown.style.display = 'none'; 
+            return;
+        }
+
+        clearTimeout(debounceTimerTransacciones);
+        debounceTimerTransacciones = setTimeout(async () => {
+            try {
+                const res = await fetch(`/api/transacciones?termino=${encodeURIComponent(termino)}`);
+                const coincidencias = await res.json();
+
+                if (!coincidencias || coincidencias.length === 0) { 
+                    dropdown.style.display = 'none'; 
+                    return; 
+                }
+
+                const maxResults = coincidencias.slice(0, 6);
+                dropdown.innerHTML = '';
+                maxResults.forEach(t => {
+                    dropdown.innerHTML += `<div class="autocomplete-item" onclick="seleccionarDesdeAutocompletarTransacciones('${t.Id_Transaccion}')"><div class="details"><span class="main-name">Tx #${t.Id_Transaccion} - ${t.D_NumeroProducto}</span><span class="sub-id">${t.NombreCliente || 'Sin asignar'} (₡${t.M_Monto.toLocaleString()})</span></div></div>`;
+                });
+                dropdown.style.display = 'block';
+            } catch (err) { console.error('Error de autocompletado:', err); }
+        }, 400);
+    }
+
+    function seleccionarDesdeAutocompletarTransacciones(idTransaccion) {
+        document.getElementById('input-busqueda-transacciones').value = idTransaccion;
+        document.getElementById('dropdown-autocompletar-transacciones').style.display = 'none';
+        buscarGlobalTransacciones();
+    }
+
+    function buscarGlobalTransacciones() {
+        document.getElementById('dropdown-autocompletar-transacciones').style.display = 'none';
+        cargarListaGlobalTransacciones();
+    }
+
     async function cargarListaGlobalTransacciones() {
         const tbody = document.getElementById('lista-global-transacciones-body');
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Cargando historial...</td></tr>';
+        const terminoInput = document.getElementById('input-busqueda-transacciones');
+        const termino = terminoInput ? terminoInput.value.trim().toLowerCase() : '';
+
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Consultando al motor SQL...</td></tr>';
+        
         try {
-            const res = await fetch('/api/transacciones');
-            const data = await res.json();
-            if(!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay transacciones registradas.</td></tr>'; return;
+            let url = '/api/transacciones';
+            if (termino) url += `?termino=${encodeURIComponent(termino)}`;
+
+            const res = await fetch(url);
+            let data = await res.json();
+
+            // 1. 🛡️ CAPTURAR EL ERROR REAL DEL BACKEND / SQL 🛡️
+            if (data && data.error) {
+                throw new Error(data.error); 
             }
+            
+            // 2. ASEGURARNOS DE QUE SEA UN ARREGLO
+            if (!Array.isArray(data)) {
+                throw new Error('El servidor no devolvió una lista válida.');
+            }
+
+            // 3. LÓGICA DE FILTRADO BLINDADO FRONTEND
+            if (termino && data.length > 0) {
+                data = data.filter(t => {
+                    const idTx = String(t.Id_Transaccion).toLowerCase();
+                    const idProd = t.D_NumeroProducto ? t.D_NumeroProducto.toLowerCase() : '';
+                    const nombre = t.NombreCliente ? t.NombreCliente.toLowerCase() : '';
+                    const cedula = t.CedulaCliente ? String(t.CedulaCliente).toLowerCase() : '';
+                    
+                    return idTx === termino || idProd.includes(termino) || nombre.includes(termino) || cedula.includes(termino);
+                });
+            }
+
+            if(data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--x-text-muted);">No hay transacciones registradas o que coincidan con la búsqueda.</td></tr>'; 
+                return;
+            }
+
             tbody.innerHTML = data.map(t => {
                 const color = t.C_IdTipoTransaccion == 1 ? 'var(--success-green)' : 'var(--danger-red)';
                 const icono = t.C_IdTipoTransaccion == 1 ? 'fa-arrow-up' : 'fa-arrow-down';
@@ -913,10 +1205,10 @@
                 `;
             }).join('');
         } catch (e) { 
+            // AQUÍ SE MOSTRARÁ EL ERROR REAL DE LA BASE DE DATOS
             tbody.innerHTML = `<tr><td colspan="6" style="color:var(--danger-red); text-align:center;">Error al sincronizar: ${e.message}</td></tr>`; 
         }
     }
-
     function abrirModalTransaccionGlobal(id = '', prod = '', tipo = '1', monto = '') {
         const modo = id ? 'EDIT' : 'NEW';
         document.getElementById('trx-global-modo').value = modo;
@@ -974,7 +1266,6 @@
             cargarListaGlobalTransacciones();
         } catch(e) { alert("Error al anular: " + e.message); }
     }
-
 
     // ==========================================
     // LÓGICA DE GEO, BUSCADOR Y EXPEDIENTES
@@ -1055,31 +1346,183 @@
         } catch (err) { console.error('Error cargando Distritos:', err); }
     }
 
+   /* LÓGICA DE FILTROS GEO PARA CLIENTES ACTIVOS */
+   async function cargarProvinciasActivos() {
+        const select = document.getElementById('select-provincia-activos');
+        try {
+            const res = await fetch('/api/geo/provincias');
+            if (!res.ok) return;
+            const data = await res.json();
+            select.innerHTML = '<option value="">Provincia</option>';
+            data.forEach(p => {
+                select.innerHTML += `<option value="${p.Id_Provincia}">${p.D_NombreProvincia}</option>`;
+            });
+        } catch (err) { console.error('Error cargando Provincias Activos:', err); }
+    }
+
+    async function manejarCambioProvinciaActivos() {
+        const idProvincia = document.getElementById('select-provincia-activos').value;
+        const selectCanton = document.getElementById('select-canton-activos');
+        const selectDistrito = document.getElementById('select-distrito-activos');
+        
+        selectCanton.innerHTML = '<option value="">Cantón</option>'; 
+        selectDistrito.innerHTML = '<option value="">Distrito</option>';
+        
+        if (!idProvincia) return;
+        try {
+            const res = await fetch(`/api/geo/cantones/${idProvincia}`);
+            const data = await res.json();
+            data.forEach(c => {
+                selectCanton.innerHTML += `<option value="${c.Id_Canton}">${c.D_NombreCanton}</option>`;
+            });
+        } catch (err) { console.error(err); }
+        buscarClientesActivos();
+    }
+
+    async function manejarCambioCantonActivos() {
+        const idCanton = document.getElementById('select-canton-activos').value;
+        const selectDistrito = document.getElementById('select-distrito-activos');
+        
+        selectDistrito.innerHTML = '<option value="">Distrito</option>';
+        if (!idCanton) return;
+        try {
+            const res = await fetch(`/api/geo/distritos/${idCanton}`);
+            const data = await res.json();
+            data.forEach(d => {
+                selectDistrito.innerHTML += `<option value="${d.Id_Distrito}">${d.D_NombreDistrito}</option>`;
+            });
+        } catch (err) { console.error(err); }
+        buscarClientesActivos();
+    }
+
+    function limpiarFiltrosGeoActivos() {
+        document.getElementById('select-provincia-activos').innerHTML = '<option value="">Provincia</option>';
+        document.getElementById('select-canton-activos').innerHTML = '<option value="">Cantón</option>';
+        document.getElementById('select-distrito-activos').innerHTML = '<option value="">Distrito</option>';
+        document.getElementById('input-busqueda-activos').value = '';
+        
+        cargarProvinciasActivos(); 
+        cargarClientesActivos();
+    }
+
+    /* LÓGICA DE AUTOCOMPLETADO Y BÚSQUEDA PARA CLIENTES ACTIVOS */
+    let debounceTimerActivos;
+
+    function manejarAutocompletadoActivos() {
+        const termino = document.getElementById('input-busqueda-activos').value.trim().toLowerCase();
+        const dropdown = document.getElementById('dropdown-autocompletar-activos');
+
+        if (termino.length < 2 || !cacheClientesActivos || cacheClientesActivos.length === 0) { 
+            dropdown.style.display = 'none'; 
+            return; 
+        }
+
+        clearTimeout(debounceTimerActivos);
+        debounceTimerActivos = setTimeout(() => {
+            const coincidencias = cacheClientesActivos.filter(c => {
+                const idString = String(c.C_IdPersona);
+                const nombre = c.D_Nombre ? c.D_Nombre.toLowerCase() : '';
+                const apellido1 = c.D_PrimerApellido ? c.D_PrimerApellido.toLowerCase() : '';
+                
+                return idString.includes(termino) || nombre.includes(termino) || apellido1.includes(termino);
+            }).slice(0, 6);
+
+            if (coincidencias.length === 0) { 
+                dropdown.style.display = 'none'; 
+                return; 
+            }
+
+            dropdown.innerHTML = '';
+            coincidencias.forEach((c) => {
+                const indexOriginal = cacheClientesActivos.findIndex(orig => orig.C_IdPersona === c.C_IdPersona);
+                const nombreCompleto = `${c.D_Nombre || ''} ${c.D_PrimerApellido || ''} ${c.D_SegundoApellido || ''}`.trim();
+                const badge = c.Frecuencia > 0 ? `<span class="frequent-badge"><i class="fas fa-star" style="margin-right:2px;"></i>${c.Frecuencia} Consultas</span>` : '';
+                
+                dropdown.innerHTML += `<div class="autocomplete-item" onclick="seleccionarDesdeAutocompletarActivos(${indexOriginal})"><div class="details"><span class="main-name">${nombreCompleto} ${badge}</span><span class="sub-id">Cédula: ${c.C_IdPersona}</span></div></div>`;
+            });
+            dropdown.style.display = 'block';
+        }, 300);
+    }
+
+    function seleccionarDesdeAutocompletarActivos(index) {
+        document.getElementById('dropdown-autocompletar-activos').style.display = 'none';
+        
+        const container = document.getElementById('feed-clientes-activos');
+        const c = cacheClientesActivos[index];
+        
+        const esJuridico = c.C_IdTipoPersona === 2; 
+        const isotipoClass = esJuridico ? 'mldc-isotipo-card juridico-isotipo' : 'mldc-isotipo-card'; 
+        const isotipoText = esJuridico ? 'J' : 'F';
+        const badge = c.Frecuencia > 0 ? `<span class="frequent-badge"><i class="fas fa-star" style="margin-right:3px;"></i>${c.Frecuencia} Consultas</span>` : '';
+        const ubicacionTexto = (c.D_NombreProvincia && c.D_NombreCanton && c.D_NombreDistrito) ? `<div style="font-size:12px; color:var(--x-text-muted); margin-top:4px;"><i class="fas fa-map-marker-alt"></i> ${c.D_NombreProvincia}, ${c.D_NombreCanton}, ${c.D_NombreDistrito}</div>` : '';
+
+        container.innerHTML = `<div class="x-card" style="border-color: var(--x-primary); margin-top:10px;"><div class="${isotipoClass}">${isotipoText}</div><div class="x-card-content"><div class="x-card-header"><span class="nombre">${c.D_Nombre} ${c.D_PrimerApellido} ${c.D_SegundoApellido || ''}</span><span class="id">@C_IdPersona:${c.C_IdPersona}</span> ${badge}</div><div class="x-card-body"><div><span style="color:var(--success-green);"><i class="fas fa-check-circle" style="margin-right:5px;"></i>Registrado en Core</span>${ubicacionTexto}</div><span class="link-expediente" onclick="abrirExpedienteDesdeActivos(${index})">Ver Expediente</span></div></div></div>`;
+    }
+
+    function buscarClientesActivos() {
+        document.getElementById('dropdown-autocompletar-activos').style.display = 'none';
+        cargarClientesActivos();
+    }
+
     async function cargarClientesActivos() {
         const container = document.getElementById('feed-clientes-activos');
+        const termino = document.getElementById('input-busqueda-activos') ? document.getElementById('input-busqueda-activos').value.trim().toLowerCase() : '';
+        const prov = document.getElementById('select-provincia-activos') ? document.getElementById('select-provincia-activos').value : '';
+        const cant = document.getElementById('select-canton-activos') ? document.getElementById('select-canton-activos').value : '';
+        const dist = document.getElementById('select-distrito-activos') ? document.getElementById('select-distrito-activos').value : '';
+
         container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--x-text-muted);"><i class="fas fa-circle-notch fa-spin" style="font-size:32px; margin-bottom:12px; display:block;"></i>Sincronizando con base de datos...</div>';
         
         try {
             const res = await fetch('/api/buscar?origen=clientes');
             let data = await res.json();
             
-            cacheClientesActivos = data; 
-            
-            if (!cacheClientesActivos || cacheClientesActivos.length === 0) {
-                container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--x-text-muted);">No hay clientes registrados formalmente en el Core.</div>`; 
+            // Refrescar caché maestro de activos
+            if (!termino && !prov && !cant && !dist) {
+                cacheClientesActivos = data;
+            } else if (!cacheClientesActivos || cacheClientesActivos.length === 0) {
+                cacheClientesActivos = data;
+            }
+
+            // Aplicar filtros locales combinados (Texto + Geo)
+            let filtrados = data.filter(c => {
+                let coincideTexto = true;
+                let coincideGeo = true;
+
+                if (termino) {
+                    const idString = String(c.C_IdPersona);
+                    const nombre = c.D_Nombre ? c.D_Nombre.toLowerCase() : '';
+                    const apellido1 = c.D_PrimerApellido ? c.D_PrimerApellido.toLowerCase() : '';
+                    const apellido2 = c.D_SegundoApellido ? c.D_SegundoApellido.toLowerCase() : '';
+                    
+                    coincideTexto = idString.includes(termino) || nombre.includes(termino) || apellido1.includes(termino) || apellido2.includes(termino);
+                }
+
+                if (prov) coincideGeo = coincideGeo && String(c.Id_Provincia) === prov;
+                if (cant) coincideGeo = coincideGeo && String(c.Id_Canton) === cant;
+                if (dist) coincideGeo = coincideGeo && String(c.Id_Distrito) === dist;
+
+                return coincideTexto && coincideGeo;
+            });
+
+            if (!filtrados || filtrados.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--x-text-muted);">No se encontraron clientes activos con esos parámetros.</div>`; 
                 return;
             }
+            
             container.innerHTML = '';
-            cacheClientesActivos.forEach((c, index) => {
+            filtrados.forEach((c) => {
+                const indexOriginal = cacheClientesActivos.findIndex(orig => orig.C_IdPersona === c.C_IdPersona);
                 const esJuridico = c.C_IdTipoPersona === 2; 
                 const isotipoClass = esJuridico ? 'mldc-isotipo-card juridico-isotipo' : 'mldc-isotipo-card'; 
                 const isotipoText = esJuridico ? 'J' : 'F';
                 const badge = c.Frecuencia > 0 ? `<span class="frequent-badge"><i class="fas fa-star" style="margin-right:3px;"></i>${c.Frecuencia} Consultas</span>` : '';
+                const ubicacionTexto = (c.D_NombreProvincia && c.D_NombreCanton && c.D_NombreDistrito) ? `<div style="font-size:12px; color:var(--x-text-muted); margin-top:4px;"><i class="fas fa-map-marker-alt"></i> ${c.D_NombreProvincia}, ${c.D_NombreCanton}, ${c.D_NombreDistrito}</div>` : '';
                 
-                container.innerHTML += `<div class="x-card" style="margin-top:10px;"><div class="${isotipoClass}">${isotipoText}</div><div class="x-card-content"><div class="x-card-header"><span class="nombre">${c.D_Nombre} ${c.D_PrimerApellido} ${c.D_SegundoApellido || ''}</span><span class="id">@C_IdPersona:${c.C_IdPersona}</span> ${badge}</div><div class="x-card-body"><div><span style="color:var(--success-green);"><i class="fas fa-check-circle" style="margin-right:5px;"></i>Registrado en Core</span></div><span class="link-expediente" onclick="abrirExpedienteDesdeActivos(${index})">Ver Expediente</span></div></div></div>`;
+                container.innerHTML += `<div class="x-card" style="margin-top:10px;"><div class="${isotipoClass}">${isotipoText}</div><div class="x-card-content"><div class="x-card-header"><span class="nombre">${c.D_Nombre} ${c.D_PrimerApellido} ${c.D_SegundoApellido || ''}</span><span class="id">@C_IdPersona:${c.C_IdPersona}</span> ${badge}</div><div class="x-card-body"><div><span style="color:var(--success-green);"><i class="fas fa-check-circle" style="margin-right:5px;"></i>Registrado en Core</span>${ubicacionTexto}</div><span class="link-expediente" onclick="abrirExpedienteDesdeActivos(${indexOriginal})">Ver Expediente</span></div></div></div>`;
             });
         } catch (err) {
-            container.innerHTML = `<div style="text-align:center; padding:40px; color:red;">Error de conexión con el backend al cargar clientes.</div>`;
+            container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--danger-red);">Error de conexión con el backend al cargar clientes.</div>`;
         }
     }
 

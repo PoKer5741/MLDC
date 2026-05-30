@@ -57,9 +57,11 @@ async function leerTodosProductos(req, res) {
         const pool = await poolPromise;
         const request = pool.request();
         const termino = req.query.termino || null;
+        
         if (termino) {
             request.input('Termino', sql.VarChar(100), termino);
         }
+        
         const result = await request.execute('dbo.sp_ObtenerTodosProductos');
         res.json(result.recordset);
     } catch (error) { 
@@ -70,7 +72,14 @@ async function leerTodosProductos(req, res) {
 async function leerTodasTransacciones(req, res) {
     try {
         const pool = await poolPromise;
-        const result = await pool.request().execute('dbo.sp_ObtenerTodasTransacciones');
+        const request = pool.request();
+        const termino = req.query.termino || null;
+        
+        if (termino) {
+            request.input('Termino', sql.VarChar(100), termino);
+        }
+        
+        const result = await request.execute('dbo.sp_ObtenerTodasTransacciones');
         res.json(result.recordset);
     } catch (error) { 
         res.status(500).json({ error: error.message }); 
