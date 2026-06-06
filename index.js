@@ -109,6 +109,60 @@ app.post('/api/generar-xml', async (req, res) => {
 
 app.post('/api/escenarios/4', ejecutarEscenario4);
 
+app.post('/api/comisiones/historial', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const { tipoId, tipoNombre, cantidad, monto } = req.body;
+        await pool.request()
+            .input('C_IdTipoComision', sql.Int,          parseInt(tipoId))
+            .input('D_TipoComision',   sql.VarChar(100),  tipoNombre)
+            .input('N_Cantidad',       sql.Int,          parseInt(cantidad))
+            .input('M_Monto',          sql.Decimal(22,2), parseFloat(monto))
+            .execute('dbo.sp_RegistrarHistorialComision');
+        res.json({ ok: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/api/comisiones/historial', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request().execute('dbo.sp_ObtenerHistorialComisiones');
+        res.json({
+            detalle: result.recordsets[0] || [],
+            resumenDiario: result.recordsets[1] || []
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/api/comisiones/resumen', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request().query(`
+            SELECT
+                C_IdTipoComision,
+                CASE C_IdTipoComision
+                    WHEN 1 THEN 'Comision Retiro ATM'
+                    WHEN 2 THEN 'Comision SINPE'
+                    WHEN 3 THEN 'Tarifa Red SWIFT'
+                    ELSE 'Otro'
+                END AS TipoComision,
+                COUNT(*)       AS CantidadTransacciones,
+                SUM(M_Monto)   AS TotalRecaudado
+            FROM T_Comision
+            GROUP BY C_IdTipoComision
+            ORDER BY C_IdTipoComision
+        `);
+        const total = result.recordset.reduce((acc, r) => acc + parseFloat(r.TotalRecaudado), 0);
+        res.json({ detalle: result.recordset, totalGeneral: total });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.get('/api/productos', leerTodosProductos);
 app.get('/api/transacciones', leerTodasTransacciones);
 

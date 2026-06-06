@@ -1,7 +1,7 @@
 const sql = require('mssql/msnodesqlv8'); 
 
 const config = {
-    connectionString: 'Driver={ODBC Driver 17 for SQL Server};Server=POKER;Database=Grupo3_IF51002026;Trusted_Connection=yes;',
+   connectionString: 'Driver={ODBC Driver 17 for SQL Server};Server=La-maleducada;Database=Grupo3_IF51002026_MiRespaldo;Trusted_Connection=yes;',
     options: {
         trustServerCertificate: true 
     },

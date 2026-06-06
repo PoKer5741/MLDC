@@ -177,6 +177,7 @@
         <div class="nav-item" id="nav-transacciones" onclick="switchView('transacciones')"><i class="fas fa-exchange-alt"></i> Transacciones</div>
         <div class="nav-item" id="nav-productos" onclick="switchView('productos')"><i class="fas fa-chart-pie"></i> Análisis</div>
         <div class="nav-item" id="nav-metrics" onclick="switchView('metrics')"><i class="fas fa-tasks"></i> Escenarios Core</div>
+        <div class="nav-item" id="nav-historial-comisiones" onclick="switchView('historial-comisiones')"><i class="fas fa-history"></i> Historial Comisiones</div>
     </div>
 <div class="center-feed">
     <div class="feed-header">
@@ -358,6 +359,42 @@
                     <i class="fas fa-save" style="margin-right:8px;"></i> Ejecutar Escenario en BD
                 </button>
             </div>
+        </div>
+    </div>
+
+    <div id="section-historial-comisiones" class="view-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--x-border); padding-bottom:16px; margin-bottom:20px;">
+            <div>
+                <h3 style="margin:0 0 4px 0;">Historial de Comisiones</h3>
+                <span style="font-size:13px; color:var(--x-text-muted);">Registro de comisiones generadas por ejecución del Escenario 4</span>
+            </div>
+            <button class="btn-buscar-x" style="padding:10px 16px;" onclick="cargarHistorialComisiones()">
+                <i class="fas fa-sync-alt" style="margin-right:5px;"></i> Actualizar
+            </button>
+        </div>
+
+        <!-- Resumen por día -->
+        <div id="historial-resumen-diario" style="margin-bottom:24px;"></div>
+
+        <!-- Detalle por tipo -->
+        <div style="background-color:var(--x-bg-card); border-radius:12px; border:1px solid var(--x-border); padding:16px; overflow-x:auto;">
+            <div style="font-size:13px; color:var(--x-text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.5px; margin-bottom:14px;">
+                <i class="fas fa-list" style="margin-right:8px;"></i>Detalle por Ejecución
+            </div>
+            <table class="product-sub-table" style="width:100%;">
+                <thead>
+                    <tr style="text-align:left;">
+                        <th>Fecha / Hora</th>
+                        <th>Tipo de Comisión</th>
+                        <th style="text-align:center;">Cantidad</th>
+                        <th style="text-align:right;">Monto (&#x20a1;)</th>
+                        <th style="text-align:right;">Acumulado Tipo (&#x20a1;)</th>
+                    </tr>
+                </thead>
+                <tbody id="historial-detalle-body">
+                    <tr><td colspan="5" style="text-align:center; color:var(--x-text-muted);">Cargando...</td></tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -749,7 +786,8 @@
         if (viewName === 'clientes') cargarClientesActivos();
         if (viewName === 'productos') cargarListaGlobalProductos(); 
         if (viewName === 'catalogo') cargarCatalogo();
-        if (viewName === 'transacciones') cargarListaGlobalTransacciones(); 
+        if (viewName === 'transacciones') cargarListaGlobalTransacciones();
+        if (viewName === 'historial-comisiones') cargarHistorialComisiones();
     }
 
     // ==========================================
@@ -1879,6 +1917,119 @@
     }
 
     // ==========================================
+    // HISTORIAL DE COMISIONES
+    // ==========================================
+    async function cargarHistorialComisiones() {
+        const tbody  = document.getElementById('historial-detalle-body');
+        const resDiv = document.getElementById('historial-resumen-diario');
+        tbody.innerHTML  = '<tr><td colspan="5" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Consultando...</td></tr>';
+        resDiv.innerHTML = '';
+
+        try {
+            const res  = await fetch('/api/comisiones/historial');
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+
+            // --- Total general ---
+            const totalGeneral = (data.resumenDiario || []).reduce((acc, d) => acc + parseFloat(d.TotalDia), 0);
+            const totalOps     = (data.resumenDiario || []).reduce((acc, d) => acc + parseInt(d.TotalOperaciones), 0);
+            resDiv.innerHTML = `
+                <div style="background-color:rgba(139,92,246,0.15); border:2px solid #8b5cf6; border-radius:12px; padding:20px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-size:13px; color:#a78bfa; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; margin-bottom:6px;">
+                            <i class="fas fa-coins" style="margin-right:8px;"></i>Total Acumulado en Historial
+                        </div>
+                        <div style="font-size:32px; font-weight:700; color:#a78bfa; font-family:'Roboto Mono',monospace;">
+                            &#x20a1;${totalGeneral.toLocaleString('es-CR', {minimumFractionDigits: 2})}
+                        </div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:13px; color:var(--x-text-muted); margin-bottom:4px;">Total de operaciones</div>
+                        <div style="font-size:28px; font-weight:700; color:var(--x-text-muted); font-family:'Roboto Mono',monospace;">${totalOps}</div>
+                    </div>
+                </div>`;
+
+            // --- Resumen diario ---
+            if (data.resumenDiario && data.resumenDiario.length > 0) {
+                resDiv.innerHTML += `
+                <div style="background-color:rgba(139,92,246,0.08); border:1px solid rgba(139,92,246,0.4); border-radius:12px; padding:20px; margin-bottom:4px;">
+                    <div style="font-size:13px; color:#a78bfa; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; margin-bottom:14px;">
+                        <i class="fas fa-calendar-alt" style="margin-right:8px;"></i>Resumen por D&iacute;a
+                    </div>
+                    <table style="width:100%; border-collapse:collapse; font-size:14px;">
+                        <thead>
+                            <tr style="color:var(--x-text-muted); border-bottom:1px solid var(--x-border);">
+                                <th style="text-align:left; padding:8px 6px;">Fecha</th>
+                                <th style="text-align:center; padding:8px 6px;">Operaciones</th>
+                                <th style="text-align:right; padding:8px 6px;">Total del D&iacute;a (&#x20a1;)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.resumenDiario.map(d => `
+                            <tr style="border-bottom:1px solid rgba(56,68,77,0.3);">
+                                <td style="padding:10px 6px; font-weight:600; color:#a78bfa;">${d.Dia}</td>
+                                <td style="padding:10px 6px; text-align:center; color:var(--x-text-muted);">${d.TotalOperaciones}</td>
+                                <td style="padding:10px 6px; text-align:right; font-weight:700; color:#a78bfa; font-family:'Roboto Mono',monospace;">
+                                    &#x20a1;${parseFloat(d.TotalDia).toLocaleString('es-CR', {minimumFractionDigits: 2})}
+                                </td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+            }
+
+            // --- Detalle por ejecución ---
+            if (!data.detalle || data.detalle.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--x-text-muted);">No hay registros aún. Ejecuta el Escenario 4 para generar historial.</td></tr>';
+                return;
+            }
+
+            const iconoMap = { 1: 'fa-credit-card', 2: 'fa-mobile-alt', 3: 'fa-globe' };
+            const colorMap = { 1: '#60a5fa', 2: '#34d399', 3: '#f59e0b' };
+
+            tbody.innerHTML = data.detalle.map(r => {
+                const icono = iconoMap[r.C_IdTipoComision] || 'fa-coins';
+                const color = colorMap[r.C_IdTipoComision] || 'var(--x-primary)';
+                const fecha = r.F_Fecha || '-';
+                return `
+                <tr style="border-bottom:1px solid rgba(56,68,77,0.3);">
+                    <td style="padding:10px 6px; color:var(--x-text-muted); font-size:13px;">${fecha}</td>
+                    <td style="padding:10px 6px; font-weight:500;">
+                        <i class="fas ${icono}" style="width:20px; color:${color}; text-align:center;"></i> ${r.D_TipoComision}
+                    </td>
+                    <td style="padding:10px 6px; text-align:center; color:var(--x-text-muted);">${r.N_Cantidad}</td>
+                    <td style="padding:10px 6px; text-align:right; font-weight:700; color:${color}; font-family:'Roboto Mono',monospace;">
+                        &#x20a1;${parseFloat(r.M_Monto).toLocaleString('es-CR', {minimumFractionDigits: 2})}
+                    </td>
+                    <td style="padding:10px 6px; text-align:right; color:var(--x-text-muted); font-family:'Roboto Mono',monospace; font-size:12px;">
+                        &#x20a1;${parseFloat(r.M_AcumuladoPorTipo).toLocaleString('es-CR', {minimumFractionDigits: 2})}
+                    </td>
+                </tr>`;
+            }).join('');
+        } catch(e) {
+            tbody.innerHTML = `<tr><td colspan="5" style="color:var(--danger-red); text-align:center;">Error: ${e.message}</td></tr>`;
+        }
+    }
+
+    async function registrarComisionesEnHistorial(resumenComisiones) {
+        const tipoMap = { 'Comision Retiro ATM': 1, 'Comision SINPE': 2, 'Tarifa Red SWIFT': 3 };
+        const filas = resumenComisiones.filter(r => r.TipoComision !== 'TOTAL GENERAL');
+        for (const r of filas) {
+            const tipoId = tipoMap[r.TipoComision] || 0;
+            await fetch('/api/comisiones/historial', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    tipoId,
+                    tipoNombre: r.TipoComision,
+                    cantidad: r.CantidadTransacciones,
+                    monto: r.TotalRecaudado
+                })
+            });
+        }
+    }
+
+    // ==========================================
     // LÓGICA DE ESCENARIOS
     // ==========================================
     function seleccionarEscenario(numeroEscenario) {
@@ -1936,20 +2087,163 @@
                     <pre style="margin:0;"><code style="color: var(--x-primary); font-family: 'Roboto Mono', monospace; font-size: 13px;">${escapedXml}</code></pre>
                 </div>`;
             } else if (escenarioActual === 4 && data.resumen && data.resumen.clientes) {
+                // 0. Totales históricos de T_Comision
+                try {
+                    const resHistorico = await fetch('/api/comisiones/resumen');
+                    const historico = await resHistorico.json();
+                    if (historico.detalle && historico.detalle.length > 0) {
+                        htmlResult += `
+                        <div style="background-color:rgba(139,92,246,0.08); border:1px solid rgba(139,92,246,0.4); border-radius:12px; padding:20px; margin-bottom:24px;">
+                            <div style="font-size:13px; color:#a78bfa; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; margin-bottom:16px;">
+                                <i class="fas fa-history" style="margin-right:8px;"></i>Comisiones Acumuladas en Base de Datos (Histórico Total)
+                            </div>
+                            <table style="width:100%; border-collapse:collapse; font-size:14px;">
+                                <thead>
+                                    <tr style="color:var(--x-text-muted); border-bottom:1px solid var(--x-border);">
+                                        <th style="text-align:left; padding:8px 6px;">Tipo de Comisión</th>
+                                        <th style="text-align:center; padding:8px 6px;">Cantidad</th>
+                                        <th style="text-align:right; padding:8px 6px;">Total Acumulado (&#x20a1;)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+                        historico.detalle.forEach(r => {
+                            const icono = r.TipoComision.includes('ATM')   ? 'fa-credit-card' :
+                                          r.TipoComision.includes('SINPE') ? 'fa-mobile-alt'  : 'fa-globe';
+                            htmlResult += `
+                                    <tr style="border-bottom:1px solid rgba(56,68,77,0.3);">
+                                        <td style="padding:10px 6px; font-weight:500;">
+                                            <i class="fas ${icono}" style="width:20px; color:#a78bfa; text-align:center;"></i> ${r.TipoComision}
+                                        </td>
+                                        <td style="padding:10px 6px; text-align:center; color:var(--x-text-muted);">${r.CantidadTransacciones}</td>
+                                        <td style="padding:10px 6px; text-align:right; font-weight:700; color:#a78bfa; font-family:'Roboto Mono',monospace;">
+                                            &#x20a1;${parseFloat(r.TotalRecaudado).toLocaleString('es-CR', {minimumFractionDigits: 2})}
+                                        </td>
+                                    </tr>`;
+                        });
+                        htmlResult += `
+                                </tbody>
+                                <tfoot>
+                                    <tr style="background-color:rgba(139,92,246,0.12); border-top:2px solid #8b5cf6;">
+                                        <td style="padding:12px 6px; font-weight:700; color:#a78bfa;">
+                                            <i class="fas fa-coins" style="width:20px; text-align:center;"></i> TOTAL HISTÓRICO
+                                        </td>
+                                        <td></td>
+                                        <td style="padding:12px 6px; text-align:right; font-weight:700; font-size:18px; color:#a78bfa; font-family:'Roboto Mono',monospace;">
+                                            &#x20a1;${historico.totalGeneral.toLocaleString('es-CR', {minimumFractionDigits: 2})}
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>`;
+                    }
+                } catch(e) { console.error('Error cargando histórico de comisiones:', e); }
+
+                // 1. Tabla de lo recaudado por tipo de comisión (SQL result set 2)
+                if (data.resumen.resumenComisiones && data.resumen.resumenComisiones.length > 0) {
+                    const filaTotal    = data.resumen.resumenComisiones.find(r => r.TipoComision === 'TOTAL GENERAL');
+                    const filasDetalle = data.resumen.resumenComisiones.filter(r => r.TipoComision !== 'TOTAL GENERAL');
+
+                    htmlResult += `
+                    <div style="background-color:var(--x-bg-card); border:1px solid var(--x-border); border-radius:12px; padding:20px; margin-bottom:24px;">
+                        <div style="font-size:13px; color:var(--x-text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.5px; margin-bottom:16px;">
+                            <i class="fas fa-chart-bar" style="margin-right:8px; color:var(--x-primary);"></i>Resumen de lo Recaudado por la Entidad
+                        </div>
+                        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+                            <thead>
+                                <tr style="color:var(--x-text-muted); border-bottom:1px solid var(--x-border);">
+                                    <th style="text-align:left; padding:8px 6px;">Tipo de Cobro</th>
+                                    <th style="text-align:center; padding:8px 6px;">Transacciones</th>
+                                    <th style="text-align:right; padding:8px 6px;">Total Recaudado (&#x20a1;)</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+
+                    filasDetalle.forEach(r => {
+                        const icono = r.TipoComision.includes('ATM')   ? 'fa-credit-card' :
+                                      r.TipoComision.includes('SINPE') ? 'fa-mobile-alt'  : 'fa-globe';
+                        htmlResult += `
+                                <tr style="border-bottom:1px solid rgba(56,68,77,0.3);">
+                                    <td style="padding:10px 6px; font-weight:500;">
+                                        <i class="fas ${icono}" style="width:20px; color:var(--x-text-muted); text-align:center;"></i> ${r.TipoComision}
+                                    </td>
+                                    <td style="padding:10px 6px; text-align:center; color:var(--x-text-muted);">${r.CantidadTransacciones}</td>
+                                    <td style="padding:10px 6px; text-align:right; font-weight:700; color:var(--x-primary); font-family:'Roboto Mono',monospace;">
+                                        &#x20a1;${parseFloat(r.TotalRecaudado).toLocaleString('es-CR', {minimumFractionDigits: 2})}
+                                    </td>
+                                </tr>`;
+                    });
+
+                    htmlResult += filaTotal ? `
+                            </tbody>
+                            <tfoot>
+                                <tr style="background-color:rgba(30,142,62,0.1); border-top:2px solid var(--success-green);">
+                                    <td style="padding:12px 6px; font-weight:700; color:var(--success-green);">
+                                        <i class="fas fa-chart-line" style="width:20px; text-align:center;"></i> TOTAL GENERAL
+                                    </td>
+                                    <td style="padding:12px 6px; text-align:center; font-weight:700; color:var(--success-green);">${filaTotal.CantidadTransacciones}</td>
+                                    <td style="padding:12px 6px; text-align:right; font-weight:700; font-size:18px; color:var(--success-green); font-family:'Roboto Mono',monospace;">
+                                        &#x20a1;${parseFloat(filaTotal.TotalRecaudado).toLocaleString('es-CR', {minimumFractionDigits: 2})}
+                                    </td>
+                                </tr>
+                            </tfoot>` : `</tbody>`;
+
+                    htmlResult += `
+                        </table>
+                    </div>`;
+                }
+
+                // 2. Desglose financiero por cliente
                 data.resumen.clientes.forEach(c => {
-                    htmlResult += `<div style="background-color:var(--x-bg); border:1px solid var(--x-border); border-radius:8px; padding:16px; margin-bottom:12px;">
-                        <div style="color:var(--x-primary); font-weight:700; font-size:15px; margin-bottom:12px;">${c.nombre} (Céd: ${c.cedula})</div>
-                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:8px;">`;
+                    htmlResult += `
+                    <div style="background-color:var(--x-bg-card); border:1px solid var(--x-border); border-radius:12px; padding:20px; margin-bottom:16px;">
+                        <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(56, 68, 77, 0.4); padding-bottom:12px; margin-bottom:12px;">
+                            <div style="color:var(--x-primary); font-weight:700; font-size:16px;">
+                                <i class="fas fa-user-circle" style="margin-right:8px;"></i>${c.nombre}
+                            </div>
+                            <div style="color:var(--x-text-muted); font-size:13px; font-family:'Roboto Mono', monospace;">C&eacute;d: ${c.cedula}</div>
+                        </div>
+                        <table style="width:100%; border-collapse: collapse; font-size:13px;">
+                            <thead>
+                                <tr style="text-align:left; color:var(--x-text-muted); border-bottom:1px solid var(--x-border);">
+                                    <th style="padding-bottom:8px;">Concepto Operativo</th>
+                                    <th style="padding-bottom:8px;">Producto Afectado</th>
+                                    <th style="padding-bottom:8px; text-align:right;">Monto Cobrado (&#x20a1;)</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+
+                    let subtotalCliente = 0;
                     c.transacciones.forEach(tx => {
                         const color = tx.estado === 'Aprobada' ? 'var(--success-green)' : 'var(--danger-red)';
-                        htmlResult += `<div style="background-color:var(--x-bg-card); padding:10px; border-radius:6px; font-size:12px;">
-                            <div style="font-weight:700;">${tx.tipo}</div>
-                            <div style="color:var(--x-text-muted);">Producto: ${tx.producto}</div>
-                            <div style="font-weight:700; color:${color};">₡${tx.monto.toLocaleString()} - ${tx.estado}</div>
-                        </div>`;
+                        const icon = tx.tipo.includes('Remesa') ? 'fa-globe-americas' :
+                                     (tx.tipo.includes('Compra') || tx.tipo.includes('Venta') || tx.tipo.includes('Mesa')) ? 'fa-exchange-alt' : 'fa-file-invoice-dollar';
+                        if (tx.estado === 'Aprobada') subtotalCliente += parseFloat(tx.monto);
+                        htmlResult += `
+                                <tr style="border-bottom:1px solid rgba(56, 68, 77, 0.2);">
+                                    <td style="padding:10px 0; font-weight:500;">
+                                        <i class="fas ${icon}" style="width:20px; color:var(--x-text-muted); text-align:center;"></i> ${tx.tipo}
+                                    </td>
+                                    <td style="padding:10px 0; font-family:'Roboto Mono', monospace; color:var(--x-text-muted);">${tx.producto}</td>
+                                    <td style="padding:10px 0; text-align:right; font-weight:700; color:${color};">
+                                        &#x20a1;${tx.monto.toLocaleString('es-CR', {minimumFractionDigits: 2})}
+                                    </td>
+                                </tr>`;
                     });
-                    htmlResult += `</div></div>`;
+
+                    htmlResult += `
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="2" style="text-align:right; padding-top:12px; font-weight:700; color:var(--x-text-muted);">Subtotal aportado al Core:</td>
+                                    <td style="text-align:right; padding-top:12px; font-weight:700; color:var(--x-text-main); font-family:'Roboto Mono', monospace; font-size:14px;">
+                                        &#x20a1;${subtotalCliente.toLocaleString('es-CR', {minimumFractionDigits: 2})}
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>`;
                 });
+
             } else if (escenarioActual === 1 && data.resumen && data.resumen.clientes) {
                 data.resumen.clientes.forEach(c => {
                     htmlResult += `<div style="background-color:var(--x-bg); border:1px solid var(--x-border); border-radius:8px; padding:16px; margin-bottom:12px;"><div style="color:var(--x-primary); font-weight:700; font-size:15px; margin-bottom:12px;">${c.nombre} (Céd: ${c.cedula})</div>`;
@@ -1982,6 +2276,9 @@
             logs.style.display = 'none';
             btn.innerHTML = '<i class="fas fa-check"></i> Ejecución Exitosa'; btn.style.backgroundColor = 'var(--success-green)'; btn.disabled = true;
             if(document.getElementById('section-clientes').classList.contains('active')) cargarClientesActivos();
+            if (escenarioActual === 4 && data.resumen && data.resumen.resumenComisiones) {
+                registrarComisionesEnHistorial(data.resumen.resumenComisiones).catch(e => console.error('Historial:', e));
+            }
 
         } catch (error) {
             logs.innerHTML = `<span style="color:var(--danger-red);">Error:<br>${error.message}</span>`;

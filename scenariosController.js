@@ -25,6 +25,9 @@ function getMesesActuales() {
     return meses;
 }
 
+// ==========================================
+// ESCENARIO 1: Carga Anual de Padrón y Productos
+// ==========================================
 async function ejecutarEscenario1(req, res) {
     const pool = await poolPromise;
     const meses = getMesesActuales();
@@ -131,6 +134,9 @@ async function ejecutarEscenario1(req, res) {
     }
 }
 
+// ==========================================
+// ESCENARIO 2: Procesamiento Masivo de Consumos
+// ==========================================
 async function ejecutarEscenario2(req, res) {
     const pool = await poolPromise;
     const log = [];
@@ -210,150 +216,61 @@ async function ejecutarEscenario2(req, res) {
     }
 }
 
+// ==========================================
+// ESCENARIO 4: Comisiones y Divisas (Set-Based)
+// ==========================================
 async function ejecutarEscenario4(req, res) {
-    const pool = await poolPromise;
-    const log = [];
-    const resumen = {
-        remesasInsertadas: 0,
-        divisasInsertadas: 0,
-        comisionesInsertadas: 0,
-        clientes: []
-    };
-
     try {
-        // 1. Obtener clientes random con productos (mismos que escenario 2)
-        const clientesResult = await pool.request().execute('dbo.sp_ObtenerClientesRandomConProductos');
-        if (clientesResult.recordset.length === 0) {
-            return res.status(400).json({ estado: 'error', error: 'Requiere Escenario 1 previo para tener clientes con productos.' });
+        const pool = await poolPromise;
+        const result = await pool.request().execute('dbo.sp_EjecutarEscenario4_Completo');
+
+        const registros          = result.recordsets[0]; // Log por cliente
+        const resumenComisiones  = result.recordsets[1]; // Desglose SINPE / ATM / SWIFT + Total
+
+        if (!registros || registros.length === 0) {
+            return res.status(400).json({
+                estado: 'error',
+                error: 'No se encontraron clientes elegibles con productos para ejecutar el escenario.'
+            });
         }
 
-        // 2. Obtener tipos de producto para identificar remesas (14) y divisas (15)
-        const tiposResult = await pool.request().execute('dbo.sp_ObtenerTiposProductos');
-        const tiposProducto = tiposResult.recordset;
+        const resumen = {
+            clientes: [],
+            resumenComisiones: resumenComisiones || []
+        };
 
-        const tipoRemesas  = tiposProducto.find(t => t.IdProducto === 14);
-        const tipoDivisas  = tiposProducto.find(t => t.IdProducto === 15);
+        const mapClientes = new Map();
 
-        if (!tipoRemesas || !tipoDivisas) {
-            return res.status(400).json({ estado: 'error', error: 'El catálogo de productos no contiene Remesas (14) o Divisas (15). Verifique T_Cat_TipoProducto.' });
-        }
-
-        const clientes = clientesResult.recordset;
-
-        for (const cliente of clientes) {
-            const idCliente = String(cliente.Id_Cliente).trim();
-            const nombreCliente = `${cliente.D_Nombre || ''} ${cliente.D_PrimerApellido || ''}`.trim();
-            const txCliente = [];
-
-            // Obtener productos del cliente
-            const productosResult = await pool.request()
-                .input('Id_Cliente', sql.VarChar(20), idCliente)
-                .execute('dbo.sp_ObtenerProductosPorCliente');
-            const productos = productosResult.recordset;
-            if (productos.length === 0) {
-                log.push(`[${nombreCliente}] Sin productos — omitido.`);
-                continue;
-            }
-
-            const productoBase = productos[Math.floor(Math.random() * productos.length)];
-
-            // ── A) REMESA DE DINERO ──────────────────────────────────────
-            const sufRemesa = Math.floor(Math.random() * 9000) + 1000;
-            const numRemesa = `REM-${idCliente}-${sufRemesa}`;
-            const montoRemesa = parseFloat((Math.random() * 450000 + 50000).toFixed(2));
-
-            try {
-                await invocarCrud(crud.crearProducto, {
-                    numeroProducto: numRemesa,
-                    idCliente: idCliente,
-                    tipoProducto: tipoRemesas.IdProducto,
-                    saldoInicial: montoRemesa
+        registros.forEach(fila => {
+            if (!mapClientes.has(fila.Cedula)) {
+                mapClientes.set(fila.Cedula, {
+                    cedula: fila.Cedula,
+                    nombre: fila.NombreCliente,
+                    transacciones: []
                 });
-
-                await invocarCrud(crud.crearTransaccion, {
-                    idProductoRef: numRemesa,
-                    monto: montoRemesa,
-                    tipoTransaccion: 1  // Ingreso a la entidad
-                });
-
-                resumen.remesasInsertadas++;
-                txCliente.push({ tipo: 'Remesa de dinero', producto: numRemesa, monto: montoRemesa, estado: 'Aprobada' });
-                log.push(`  [${nombreCliente}] Remesa registrada: ${numRemesa} — ₡${montoRemesa.toLocaleString()}`);
-            } catch (e) {
-                txCliente.push({ tipo: 'Remesa de dinero', producto: numRemesa, monto: montoRemesa, estado: 'Rechazada' });
-                log.push(`  [${nombreCliente}] Remesa fallida: ${e.message}`);
             }
+            
+            mapClientes.get(fila.Cedula).transacciones.push({
+                tipo: fila.TipoOperacion,
+                producto: fila.ProductoRef,
+                monto: parseFloat(fila.Monto),
+                estado: fila.Estado
+            });
+        });
 
-            // ── B) COMPRA Y VENTA DE DIVISAS ─────────────────────────────
-            const tasaCambio = parseFloat((600 + Math.random() * 20).toFixed(2)); // tipo de cambio CRC/USD
-            const montoDolares = parseFloat((Math.random() * 5000 + 500).toFixed(2));
-            const montoColones = parseFloat((montoDolares * tasaCambio).toFixed(2));
-            const sufDivisa = Math.floor(Math.random() * 9000) + 1000;
-            const numDivisa = `DIV-${idCliente}-${sufDivisa}`;
-            const esCompra = Math.random() > 0.5;
-
-            try {
-                await invocarCrud(crud.crearProducto, {
-                    numeroProducto: numDivisa,
-                    idCliente: idCliente,
-                    tipoProducto: tipoDivisas.IdProducto,
-                    saldoInicial: montoColones
-                });
-
-                // La entidad gana en el spread; se registra como ingreso
-                await invocarCrud(crud.crearTransaccion, {
-                    idProductoRef: numDivisa,
-                    monto: montoColones,
-                    tipoTransaccion: 1
-                });
-
-                resumen.divisasInsertadas++;
-                const desc = `${esCompra ? 'Compra' : 'Venta'} divisas USD ${montoDolares} @ ₡${tasaCambio}`;
-                txCliente.push({ tipo: desc, producto: numDivisa, monto: montoColones, estado: 'Aprobada' });
-                log.push(`  [${nombreCliente}] ${desc} → ${numDivisa} — ₡${montoColones.toLocaleString()}`);
-            } catch (e) {
-                txCliente.push({ tipo: 'Compra/Venta divisas', producto: numDivisa, monto: montoColones, estado: 'Rechazada' });
-                log.push(`  [${nombreCliente}] Divisa fallida: ${e.message}`);
-            }
-
-            // ── C) COMISIONES (cajero, SINPE, SWIFT) ─────────────────────
-            const comisiones = [
-                { nombre: 'Comisión cajero automático', monto: parseFloat((Math.random() * 800 + 200).toFixed(2)) },
-                { nombre: 'Comisión SINPE Móvil',       monto: parseFloat((Math.random() * 500 + 100).toFixed(2)) },
-                { nombre: 'Comisión SWIFT internacional', monto: parseFloat((Math.random() * 8000 + 2000).toFixed(2)) }
-            ];
-
-            for (const comision of comisiones) {
-                try {
-                    // Las comisiones se registran como transacción de ingreso
-                    // sobre el producto base del cliente (la entidad cobra)
-                    await invocarCrud(crud.crearTransaccion, {
-                        idProductoRef: productoBase.D_NumeroProducto,
-                        monto: comision.monto,
-                        tipoTransaccion: 1
-                    });
-
-                    resumen.comisionesInsertadas++;
-                    txCliente.push({ tipo: comision.nombre, producto: productoBase.D_NumeroProducto, monto: comision.monto, estado: 'Aprobada' });
-                    log.push(`  [${nombreCliente}] ${comision.nombre}: ₡${comision.monto.toLocaleString()} → ASENTADA`);
-                } catch (e) {
-                    txCliente.push({ tipo: comision.nombre, producto: productoBase.D_NumeroProducto, monto: comision.monto, estado: 'Rechazada' });
-                    log.push(`  [${nombreCliente}] ${comision.nombre} fallida: ${e.message}`);
-                }
-            }
-
-            resumen.clientes.push({ cedula: idCliente, nombre: nombreCliente, transacciones: txCliente });
-        }
+        resumen.clientes = Array.from(mapClientes.values());
 
         res.json({
             estado: 'completado',
-            mensaje: `Escenario 4 procesado: ${resumen.remesasInsertadas} remesas, ${resumen.divisasInsertadas} operaciones de divisas, ${resumen.comisionesInsertadas} comisiones registradas.`,
-            resumen,
-            log
+            mensaje: 'Procedimiento almacenado de liquidaciones y remesas ejecutado integramente por el motor SQL.',
+            resumen: resumen
         });
 
     } catch (error) {
-        res.status(500).json({ estado: 'error', error: error.message, log });
+        res.status(500).json({ 
+            estado: 'error', 
+            error: error.message 
+        });
     }
 }
 

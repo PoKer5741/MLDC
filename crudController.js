@@ -253,6 +253,49 @@ async function registrarVisita(req, res) {
     }
 }
 
+// ==========================================
+// 3. ENLACES OPERATIVOS PARA ESCENARIO 4
+// ==========================================
+
+async function crearComisionEntidad(req, res) {
+    try {
+        const pool = await poolPromise;
+        const { idProductoRef, idCliente, idTipoComision, idMoneda, monto, descripcion } = req.body;
+        
+        await pool.request()
+            .input('Id_Producto_Ref', sql.VarChar(50), idProductoRef)
+            .input('Id_Cliente', sql.Int, parseInt(idCliente))
+            .input('C_IdTipoComision', sql.Int, parseInt(idTipoComision))
+            .input('C_IdMoneda', sql.Int, parseInt(idMoneda))
+            .input('M_Monto', sql.Decimal(22, 2), monto)
+            .input('D_Descripcion', sql.VarChar(255), descripcion)
+            .execute('dbo.sp_RegistrarComision');
+            
+        res.json({ mensaje: 'Comisión registrada como ganancia de la entidad.' });
+    } catch (error) { 
+        res.status(500).json({ error: error.message }); 
+    }
+}
+
+async function crearOperacionDivisa(req, res) {
+    try {
+        const pool = await poolPromise;
+        const { idCliente, idTipoCambio, tipoOperacion, montoOrigen, montoDestino } = req.body;
+        
+        await pool.request()
+            .input('Id_Cliente', sql.Int, parseInt(idCliente))
+            .input('Id_TipoCambio', sql.Int, parseInt(idTipoCambio))
+            .input('T_TipoOperacion', sql.VarChar(10), tipoOperacion)
+            .input('M_MontoOrigen', sql.Decimal(22, 2), montoOrigen)
+            .input('M_MontoDestino', sql.Decimal(22, 2), montoDestino)
+            .execute('dbo.sp_RegistrarOperacionCambio');
+            
+        res.json({ mensaje: 'Operación de cambio registrada correctamente.' });
+    } catch (error) { 
+        res.status(500).json({ error: error.message }); 
+    }
+}
+
 module.exports = {
     leerProductosCliente,
     leerProducto,
@@ -270,5 +313,7 @@ module.exports = {
     registrarVisita,
     leerTodosProductos,
     leerTodasTransacciones,
-    eliminarClienteSeguro
+    eliminarClienteSeguro,
+    crearComisionEntidad,
+    crearOperacionDivisa
 };
