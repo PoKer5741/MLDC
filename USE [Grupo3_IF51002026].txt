@@ -1,0 +1,1840 @@
+USE [Grupo3_IF51002026]
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ActualizarPersona] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_ActualizarPersona]
+    @C_IdPersona INT,
+    @D_Nombre VARCHAR(200),
+    @D_PrimerApellido VARCHAR(50),
+    @C_IdTipoPersona INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        UPDATE dbo.T_Persona
+        SET D_Nombre = @D_Nombre, D_PrimerApellido = @D_PrimerApellido, C_IdTipoPersona = @C_IdTipoPersona
+        WHERE C_IdPersona = @C_IdPersona;
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ActualizarProducto] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_ActualizarProducto]
+    @D_NumeroProducto VARCHAR(50),
+    @M_Saldo DECIMAL(18, 2),
+    @N_Estado INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        UPDATE dbo.T_Producto
+        SET M_Saldo = @M_Saldo,
+            N_Estado = @N_Estado
+        WHERE D_NumeroProducto = @D_NumeroProducto;
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ActualizarTipoProducto] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE   PROCEDURE [dbo].[sp_ActualizarTipoProducto]
+    @IdProducto INT,
+    @Nombre     VARCHAR(200)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE T_Tipo_Producto_Servicio_Legitimacion
+    SET D_Descripcion = @Nombre
+    WHERE Id_Tipo_Producto_Servicio_Legitimacion = @IdProducto;
+END
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ActualizarTransaccion] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_ActualizarTransaccion]
+    @Id_Transaccion INT,
+    @M_Monto DECIMAL(18, 2)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        UPDATE dbo.T_Transaccion
+        SET M_Monto = @M_Monto
+        WHERE Id_Transaccion = @Id_Transaccion;
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_BuscarClientesActivos] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_BuscarClientesActivos]
+    @Termino VARCHAR(100) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF @Termino IS NULL OR LTRIM(RTRIM(@Termino)) = ''
+    BEGIN
+        SELECT TOP 50
+            p.C_IdPersona, p.D_Nombre, p.D_PrimerApellido, p.C_IdTipoPersona, c.Q_FrecuenciaConsulta AS Frecuencia
+        FROM dbo.T_Persona p WITH (NOLOCK)
+        INNER JOIN dbo.T_Cliente c WITH (NOLOCK) ON c.C_IdPersona = p.C_IdPersona
+        ORDER BY c.Q_FrecuenciaConsulta DESC, p.F_FechaRegistro DESC;
+    END
+    ELSE
+    BEGIN
+        SELECT TOP 50
+            p.C_IdPersona, p.D_Nombre, p.D_PrimerApellido, p.C_IdTipoPersona, c.Q_FrecuenciaConsulta AS Frecuencia
+        FROM dbo.T_Persona p WITH (NOLOCK)
+        INNER JOIN dbo.T_Cliente c WITH (NOLOCK) ON c.C_IdPersona = p.C_IdPersona
+        WHERE CAST(p.C_IdPersona AS VARCHAR(50)) LIKE '%' + LTRIM(RTRIM(@Termino)) + '%'
+           OR p.D_Nombre COLLATE Latin1_General_CI_AI LIKE '%' + LTRIM(RTRIM(@Termino)) + '%'
+           OR p.D_PrimerApellido COLLATE Latin1_General_CI_AI LIKE '%' + LTRIM(RTRIM(@Termino)) + '%'
+        ORDER BY c.Q_FrecuenciaConsulta DESC, p.D_PrimerApellido, p.D_Nombre;
+    END
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_BuscarPadronInteligente] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_BuscarPadronInteligente]
+    @Termino VARCHAR(200) = NULL,
+    @IdProvincia INT = NULL,
+    @IdCanton INT = NULL,
+    @IdDistrito INT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT TOP 50
+        p.D_Cedula AS C_IdPersona, 
+        p.D_PrimerNombre AS D_Nombre, 
+        p.D_PrimerApellido, 
+        p.D_SegundoApellido,
+        dist.D_NombreDistrito,
+        cant.D_NombreCanton,
+        prov.D_NombreProvincia,
+        ISNULL(cli.Q_FrecuenciaConsulta, 0) AS Frecuencia
+    FROM dbo.T_Padron p WITH (NOLOCK)
+    CROSS APPLY (
+        SELECT TRY_CAST(SUBSTRING(p.D_CodigoDistritoTSE, 1, 5) AS INT) AS Id_Distrito
+    ) calc
+    LEFT JOIN dbo.T_Distrito dist WITH (NOLOCK) ON dist.Id_Distrito = calc.Id_Distrito
+    LEFT JOIN dbo.T_Canton cant WITH (NOLOCK) ON cant.Id_Canton = dist.Id_Canton
+    LEFT JOIN dbo.T_Provincia prov WITH (NOLOCK) ON prov.Id_Provincia = cant.Id_Provincia
+    LEFT JOIN dbo.T_Cliente cli WITH (NOLOCK) ON cli.C_IdPersona = TRY_CAST(p.D_Cedula AS INT)
+    WHERE 
+        (@Termino IS NULL OR LTRIM(RTRIM(@Termino)) = '' OR 
+         p.D_Cedula LIKE '%' + REPLACE(LTRIM(RTRIM(@Termino)), ' ', '%') + '%' OR
+         (p.D_PrimerNombre + ' ' + p.D_PrimerApellido + ' ' + ISNULL(p.D_SegundoApellido, '')) LIKE '%' + REPLACE(LTRIM(RTRIM(@Termino)), ' ', '%') + '%')
+        AND (@IdDistrito IS NULL OR calc.Id_Distrito = @IdDistrito)
+        AND (@IdCanton IS NULL OR dist.Id_Canton = @IdCanton)
+        AND (@IdProvincia IS NULL OR prov.Id_Provincia = @IdProvincia)
+    ORDER BY Frecuencia DESC, p.D_PrimerApellido ASC, p.D_PrimerNombre ASC;
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_CalcularRiesgoIndividual] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_CalcularRiesgoIndividual]
+    @Id_Cliente INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @IdPersona INT;
+    DECLARE @TipoPersona INT;
+    DECLARE @IdProvincia INT;
+    DECLARE @IdProfesion INT;
+    DECLARE @PuntajeTotal NUMERIC(5,2) = 0.0;
+    DECLARE @NivelRiesgo INT; -- 1: Bajo, 2: Moderado, 3: Alto (según T_Tipo_Riesgo_Legitimacion)
+
+    -- 1. Obtener datos del cliente y la persona asociada
+    SELECT 
+        @IdPersona = C.C_IdPersona,
+        @TipoPersona = P.C_IdTipoPersona,
+        @IdProfesion = P.C_IdProfesion
+    FROM T_Cliente C
+    INNER JOIN T_Persona P ON C.C_IdPersona = P.C_IdPersona
+    WHERE C.Id_Cliente = @Id_Cliente;
+
+    -- Obtener la provincia principal del cliente
+    SELECT TOP 1 @IdProvincia = Id_Provincia 
+    FROM T_PersonaUbicacion 
+    WHERE C_IdPersona = @IdPersona;
+
+    -- 2. Cálculo de Riesgo basado en Catálogos (Ejemplo estructural)
+    
+    -- Factor Tipo Persona (Físico vs Jurídico)
+    IF @TipoPersona = 1
+        SET @PuntajeTotal = @PuntajeTotal + 10.0;
+    ELSE IF @TipoPersona = 2
+        SET @PuntajeTotal = @PuntajeTotal + 25.0;
+
+    -- Factor Geográfico (Provincia)
+    IF @IdProvincia IN (1, 4) -- San José, Heredia
+        SET @PuntajeTotal = @PuntajeTotal + 5.0;
+    ELSE IF @IdProvincia IN (6, 7) -- Puntarenas, Limón
+        SET @PuntajeTotal = @PuntajeTotal + 15.0;
+    ELSE
+        SET @PuntajeTotal = @PuntajeTotal + 10.0;
+
+    -- Factor Profesión / Actividad
+    IF @IdProfesion IS NOT NULL
+        SET @PuntajeTotal = @PuntajeTotal + 10.0; -- Aquí se cruzaría con una tabla de pesos de profesión
+
+    -- 3. Determinar el Nivel de Riesgo
+    IF @PuntajeTotal <= 33.0
+        SET @NivelRiesgo = 3; -- Bajo (Ajustar ID según T_Tipo_Riesgo_Legitimacion)
+    ELSE IF @PuntajeTotal <= 66.0
+        SET @NivelRiesgo = 2; -- Moderado
+    ELSE
+        SET @NivelRiesgo = 1; -- Alto
+
+    -- 4. Asentar el cálculo en la tabla correspondiente
+    -- Generar un ID secuencial o manejar IDENTITY (asumiendo IDENTITY o MAX+1 para el ejemplo)
+    DECLARE @NuevoId INT;
+    SELECT @NuevoId = ISNULL(MAX(Id_Calculo_Riesgo), 0) + 1 FROM T_Calculo_Riesgo;
+
+    INSERT INTO T_Calculo_Riesgo (Id_Calculo_Riesgo, Id_Cliente, C_IdTipoPersona, N_PuntajeTotal, C_TipoRiesgo, F_FechaCalculo)
+    VALUES (@NuevoId, @Id_Cliente, @TipoPersona, @PuntajeTotal, @NivelRiesgo, GETDATE());
+
+    -- Retornar los datos calculados al backend
+    SELECT 
+        @PuntajeTotal AS PuntajeTotal, 
+        @NivelRiesgo AS NivelRiesgo,
+        CASE 
+            WHEN @NivelRiesgo = 3 THEN 'Bajo'
+            WHEN @NivelRiesgo = 2 THEN 'Medio'
+            ELSE 'Alto' 
+        END AS DescripcionRiesgo;
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_CalcularRiesgoIndividualParametrico] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE   PROCEDURE [dbo].[sp_CalcularRiesgoIndividualParametrico]
+    @Id_Cliente INT,
+    @Provincia VARCHAR(100) = 'San José',
+    @Canton VARCHAR(100) = 'Central',
+    @Profesion VARCHAR(100) = 'Asalariado',
+    @Ingresos NUMERIC(22,2) = 0,
+    @Edad INT = 30,
+    @TipoSociedad INT = 1,
+    @EstadoCivil VARCHAR(50) = 'Soltero(a)'
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        -- Inicialización de variables con valores de seguridad
+        DECLARE @R1 NUMERIC(5,2), @R2 NUMERIC(5,2), @R3 NUMERIC(5,2), @R4 NUMERIC(5,2);
+        DECLARE @R5 NUMERIC(5,2), @R6 NUMERIC(5,2), @R7 NUMERIC(5,2), @R8 NUMERIC(5,2);
+
+        -- 1. Lógica de Ingresos (Modelo Sensible a Alta Renta)
+        SET @R5 = CASE 
+            WHEN @Ingresos >= 10000000 THEN 1.0
+            WHEN @Ingresos > 500000 THEN 3.0
+            WHEN @Ingresos BETWEEN 300000 AND 500000 THEN 6.0
+            WHEN @Ingresos BETWEEN 100001 AND 299999 THEN 10.0
+            ELSE 12.5 END;
+
+        -- 2. Estado Civil (Influenciado por nivel de ingresos)
+        SET @R8 = CASE 
+            WHEN @Ingresos > 500000 THEN 2.5
+            WHEN @Ingresos BETWEEN 300000 AND 500000 THEN 6.5
+            ELSE 11.0 END;
+
+        -- 3. Edad (Segmentación por grupos vulnerables)
+        SET @R6 = CASE WHEN @Edad < 25 OR @Edad > 65 THEN 12.0 ELSE 4.0 END;
+
+        -- 4. Geografía (Ponderación basada en riesgo regional)
+        SET @R1 = CASE 
+            WHEN @Provincia = 'Heredia' THEN 1.0 WHEN @Provincia = 'Cartago' THEN 3.5
+            WHEN @Provincia = 'Alajuela' THEN 4.0 WHEN @Provincia = 'San José' THEN 8.5
+            WHEN @Provincia = 'Guanacaste' THEN 7.0 WHEN @Provincia = 'Puntarenas' THEN 10.5
+            ELSE 12.5 END;
+
+        -- 5. Derivación de Riesgo Local (Cantón/Distrito)
+        SET @R2 = ABS(LEN(@Canton) - 5) * 1.5; -- Riesgo proporcional a la complejidad del nombre
+        SET @R2 = CASE WHEN @R2 > 12.5 THEN 12.5 WHEN @R2 < 1.0 THEN 1.0 ELSE @R2 END;
+        SET @R3 = CASE WHEN (@R2 - 1.5) < 1.0 THEN 1.0 ELSE (@R2 - 1.5) END;
+
+        -- 6. Profesión y Sociedad
+        SET @R4 = CASE WHEN LOWER(@Profesion) LIKE '%estudiante%' THEN 8.0 ELSE 4.5 END;
+        SET @R7 = CASE WHEN @TipoSociedad = 2 THEN 10.5 ELSE 3.0 END;
+
+        -- Totalización
+        DECLARE @Total NUMERIC(5,2) = @R1 + @R2 + @R3 + @R4 + @R5 + @R6 + @R7 + @R8;
+        DECLARE @NivelRiesgo INT = CASE 
+            WHEN @Total <= 33.0 THEN 3 -- Bajo
+            WHEN @Total <= 66.0 THEN 2 -- Medio
+            ELSE 1 END; -- Alto
+
+        -- Persistencia
+        INSERT INTO T_Calculo_Riesgo (Id_Calculo_Riesgo, Id_Cliente, C_IdTipoPersona, N_PuntajeTotal, C_TipoRiesgo, F_FechaCalculo)
+        VALUES ((SELECT ISNULL(MAX(Id_Calculo_Riesgo), 0) + 1 FROM T_Calculo_Riesgo), @Id_Cliente, @TipoSociedad, @Total, @NivelRiesgo, GETDATE());
+
+        COMMIT TRANSACTION;
+
+        -- Retorno al Front-End
+        SELECT @R1 AS P_Provincia, @R2 AS P_Canton, @R3 AS P_Distrito, @R4 AS P_Profesion,
+               @R5 AS P_Ingresos, @R6 AS P_Edad, @R7 AS P_TipoSociedad, @R8 AS P_EstadoCivil,
+               @Total AS PuntajeTotal,
+               CASE WHEN @NivelRiesgo = 3 THEN 'Bajo' WHEN @NivelRiesgo = 2 THEN 'Medio' ELSE 'Alto' END AS DescripcionRiesgo;
+
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_CrearPersona] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_CrearPersona]
+    @C_IdPersona INT,
+    @D_Nombre VARCHAR(200),
+    @D_PrimerApellido VARCHAR(50),
+    @C_IdTipoPersona INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        IF NOT EXISTS (SELECT 1 FROM dbo.T_Persona WHERE C_IdPersona = @C_IdPersona)
+        BEGIN
+            INSERT INTO dbo.T_Persona (C_IdPersona, C_IdTipoPersona, D_Nombre, D_PrimerApellido, F_FechaRegistro)
+            VALUES (@C_IdPersona, @C_IdTipoPersona, @D_Nombre, @D_PrimerApellido, GETDATE());
+        END
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_EjecutarEscenario4_Completo] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE   PROCEDURE [dbo].[sp_EjecutarEscenario4_Completo]
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        /* 1. Seleccionar TODOS los clientes y asignar UN tipo de operacion al azar (0=Remesa, 1=Compra, 2=Venta) */
+        SELECT 
+            c.Id_Cliente,
+            p.C_IdPersona,
+            p.D_Nombre + ' ' + ISNULL(p.D_PrimerApellido, '') AS NombreCliente,
+            (ABS(CHECKSUM(NEWID())) % 3) AS TipoOp,
+            ROUND(RAND(CHECKSUM(NEWID())) * 450000 + 50000, 2) AS MontoOperacion,
+            ROUND(500 + RAND(CHECKSUM(NEWID())) * 50, 2) AS TasaCambio,
+            ROUND(RAND(CHECKSUM(NEWID())) * 5000 + 500, 2) AS MontoDolares,
+            (ABS(CHECKSUM(NEWID())) % 3) + 1 AS IdTipoComision
+        INTO #ClientesSeleccionados
+        FROM T_Cliente c
+        INNER JOIN T_Persona p ON c.C_IdPersona = p.C_IdPersona
+        WHERE EXISTS (SELECT 1 FROM T_Producto pr WHERE pr.Id_Cliente = c.Id_Cliente)
+        ORDER BY NEWID();
+
+        /* 2. Expandir calculos y asignar etiquetas segun tipo de operacion */
+        SELECT *,
+               CASE TipoOp
+                   WHEN 0 THEN 'REM-' + CAST(C_IdPersona AS VARCHAR) + '-' + CAST(CAST(RAND(CHECKSUM(NEWID())) * 9000 + 1000 AS INT) AS VARCHAR)
+                   WHEN 1 THEN 'COM-' + CAST(C_IdPersona AS VARCHAR) + '-' + CAST(CAST(RAND(CHECKSUM(NEWID())) * 9000 + 1000 AS INT) AS VARCHAR)
+                   WHEN 2 THEN 'VEN-' + CAST(C_IdPersona AS VARCHAR) + '-' + CAST(CAST(RAND(CHECKSUM(NEWID())) * 9000 + 1000 AS INT) AS VARCHAR)
+               END AS NumeroProducto,
+               CASE TipoOp
+                   WHEN 0 THEN 'Remesa Internacional'
+                   WHEN 1 THEN 'Compra de Divisas'
+                   WHEN 2 THEN 'Venta de Divisas'
+               END AS TipoOperacionNombre,
+               CASE TipoOp
+                   WHEN 0 THEN 'Ingreso por Remesa Internacional'
+                   WHEN 1 THEN 'Ingreso por Compra de Divisas'
+                   WHEN 2 THEN 'Ingreso por Venta de Divisas'
+               END AS DescripcionTransaccion,
+               CAST((MontoDolares * TasaCambio) AS NUMERIC(22,2)) AS MontoColones,
+               CASE TipoOp WHEN 1 THEN 'Compra' WHEN 2 THEN 'Venta' ELSE NULL END AS TipoOpDivisa,
+               CASE IdTipoComision
+                    WHEN 1 THEN 'Comision Retiro ATM'
+                    WHEN 2 THEN 'Comision SINPE'
+                    WHEN 3 THEN 'Tarifa Red SWIFT'
+               END AS NombreComision,
+               CASE IdTipoComision
+                    WHEN 1 THEN 750.00
+                    WHEN 2 THEN 500.00
+                    WHEN 3 THEN 18500.00
+               END AS MontoComision
+        INTO #DatosOperaciones
+        FROM #ClientesSeleccionados;
+
+        /* 3. INSERTAR OPERACION EN T_Producto y T_Transaccion (aplica para Remesa, Compra y Venta) */
+        INSERT INTO T_Producto (Id_Producto, Id_Cliente, C_TipoProducto, C_IdMoneda, D_NumeroProducto, M_Saldo, N_Estado)
+        SELECT
+            ISNULL((SELECT MAX(Id_Producto) FROM T_Producto), 0) + ROW_NUMBER() OVER(ORDER BY Id_Cliente),
+            Id_Cliente, 14, 1, NumeroProducto, MontoOperacion, 2
+        FROM #DatosOperaciones;
+
+        INSERT INTO T_Transaccion (Id_Transaccion, Id_Producto, C_IdTipoTransaccion, C_IdMoneda, M_Monto, M_SaldoDespues, D_Descripcion)
+        SELECT
+            ISNULL((SELECT MAX(Id_Transaccion) FROM T_Transaccion), 0) + ROW_NUMBER() OVER(ORDER BY Id_Cliente),
+            (SELECT MAX(Id_Producto) FROM T_Producto WHERE D_NumeroProducto = d.NumeroProducto),
+            1, 1, MontoOperacion, MontoOperacion, DescripcionTransaccion
+        FROM #DatosOperaciones d;
+
+        /* 4. INSERTAR EN T_OperacionCambio solo para Compra (1) y Venta (2) */
+        INSERT INTO T_TipoCambio (Id_TipoCambio, C_IdMonedaBase, C_IdMonedaDest, M_TasaCompra, M_TasaVenta, F_FechaVigencia)
+        SELECT 1, 2, 1, 510.00, 520.00, GETDATE()
+        WHERE NOT EXISTS (SELECT 1 FROM T_TipoCambio WHERE Id_TipoCambio = 1);
+
+        INSERT INTO T_OperacionCambio (Id_OperacionCambio, Id_Cliente, Id_TipoCambio, T_TipoOperacion, M_MontoOrigen, M_MontoDestino)
+        SELECT
+            ISNULL((SELECT MAX(Id_OperacionCambio) FROM T_OperacionCambio), 0) + ROW_NUMBER() OVER(ORDER BY Id_Cliente),
+            Id_Cliente, 1, TipoOpDivisa,
+            IIF(TipoOp = 1, MontoDolares, MontoColones),
+            IIF(TipoOp = 1, MontoColones, MontoDolares)
+        FROM #DatosOperaciones
+        WHERE TipoOp IN (1, 2);
+
+        /* 5. SELECCION DE CUENTA BASE PARA LA COMISION UNICA */
+        SELECT d.*,
+               ISNULL((SELECT TOP 1 D_NumeroProducto 
+                       FROM T_Producto pr 
+                       WHERE pr.Id_Cliente = d.Id_Cliente 
+                         AND pr.D_NumeroProducto NOT LIKE '%DAP%' 
+                         AND pr.D_NumeroProducto NOT LIKE '%DJU%'
+                         AND pr.D_NumeroProducto NOT LIKE 'REM-%'
+                         AND pr.D_NumeroProducto NOT LIKE 'COM-%'
+                         AND pr.D_NumeroProducto NOT LIKE 'VEN-%'
+                       ORDER BY NEWID()), 
+                      (SELECT TOP 1 D_NumeroProducto 
+                       FROM T_Producto pr 
+                       WHERE pr.Id_Cliente = d.Id_Cliente 
+                         AND pr.D_NumeroProducto NOT LIKE 'REM-%'
+                         AND pr.D_NumeroProducto NOT LIKE 'COM-%'
+                         AND pr.D_NumeroProducto NOT LIKE 'VEN-%'
+                       ORDER BY NEWID())) AS ProductoRef
+        INTO #DetalleComisiones
+        FROM #DatosOperaciones d;
+
+        INSERT INTO T_Transaccion (Id_Transaccion, Id_Producto, C_IdTipoTransaccion, C_IdMoneda, M_Monto, M_SaldoDespues, D_Descripcion)
+        SELECT
+            ISNULL((SELECT MAX(Id_Transaccion) FROM T_Transaccion), 0) + ROW_NUMBER() OVER(ORDER BY Id_Cliente),
+            (SELECT MAX(Id_Producto) FROM T_Producto WHERE D_NumeroProducto = dc.ProductoRef),
+            2, 1, MontoComision, 0, 'Deduccion ' + NombreComision
+        FROM #DetalleComisiones dc;
+
+        INSERT INTO T_Comision (Id_Comision, Id_Transaccion, Id_Cliente, C_IdTipoComision, C_IdMoneda, M_Monto, D_Descripcion)
+        SELECT
+            ISNULL((SELECT MAX(Id_Comision) FROM T_Comision), 0) + ROW_NUMBER() OVER(ORDER BY Id_Cliente),
+            NULL, 
+            Id_Cliente, IdTipoComision, 1, MontoComision, NombreComision
+        FROM #DetalleComisiones;
+
+        /* 6. LOG DE OPERACIONES POR CLIENTE */
+        SELECT 
+            C_IdPersona AS Cedula,
+            NombreCliente,
+            TipoOperacionNombre AS TipoOperacion,
+            NumeroProducto AS ProductoRef,
+            MontoOperacion AS Monto,
+            'Aprobada' AS Estado
+        FROM #DatosOperaciones
+        UNION ALL
+        SELECT 
+            C_IdPersona,
+            NombreCliente,
+            NombreComision,
+            ProductoRef,
+            MontoComision,
+            'Aprobada'
+        FROM #DetalleComisiones;
+
+        /* 7. RESUMEN DE LO RECAUDADO POR TIPO (SINPE, Cajeros ATM, SWIFT) + TOTAL GENERAL */
+        SELECT 
+            ISNULL(NombreComision, 'TOTAL GENERAL') AS TipoComision,
+            COUNT(*)                                 AS CantidadTransacciones,
+            SUM(MontoComision)                       AS TotalRecaudado
+        FROM #DetalleComisiones
+        GROUP BY GROUPING SETS ((NombreComision, IdTipoComision), ())
+        ORDER BY GROUPING(NombreComision), MIN(IdTipoComision);
+
+        /* 8. DEPURAR MEMORIA */
+        DROP TABLE #ClientesSeleccionados;
+        DROP TABLE #DatosOperaciones;
+        DROP TABLE #DetalleComisiones;
+
+        COMMIT TRANSACTION;
+
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_EliminarClienteSeguro] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE   PROCEDURE [dbo].[sp_EliminarClienteSeguro]
+    @C_IdPersona INT,
+    @Motivo VARCHAR(255)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        DECLARE @IdCliente INT;
+        -- Obtenemos el ID interno del cliente usando la cédula
+        SELECT @IdCliente = Id_Cliente FROM dbo.T_Cliente WHERE C_IdPersona = @C_IdPersona;
+        
+        IF @IdCliente IS NOT NULL
+        BEGIN
+            -- 1. Borrar transacciones de los productos del cliente
+            DELETE FROM dbo.T_Transaccion 
+            WHERE Id_Producto IN (SELECT Id_Producto FROM dbo.T_Producto WHERE Id_Cliente = @IdCliente);
+            
+            -- 2. Borrar los productos asociados al cliente
+            DELETE FROM dbo.T_Producto 
+            WHERE Id_Cliente = @IdCliente;
+            
+            -- 3. Borrar el cálculo de riesgo asociado en el historial paramétrico
+            DELETE FROM dbo.T_Calculo_Riesgo 
+            WHERE Id_Cliente = @IdCliente;
+
+            -- 4. Borrar el historial de consultas utilizando el Id_Cliente operativo
+            IF OBJECT_ID('dbo.T_Historial_Consultas', 'U') IS NOT NULL
+                DELETE FROM dbo.T_Historial_Consultas WHERE Id_Cliente = @IdCliente;
+
+            -- 5. Eliminar el cliente del Core Bancario
+            DELETE FROM dbo.T_Cliente 
+            WHERE Id_Cliente = @IdCliente;
+            
+            -- 6. Eliminar la persona (Mantiene intacto el registro en T_Padron)
+            DELETE FROM dbo.T_Persona 
+            WHERE C_IdPersona = @C_IdPersona;
+        END
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_EliminarPersona] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_EliminarPersona]
+    @C_IdPersona INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        DELETE FROM dbo.T_Transaccion 
+        WHERE Id_Producto IN (SELECT Id_Producto FROM dbo.T_Producto WHERE Id_Cliente = @C_IdPersona);
+        
+        DELETE FROM dbo.T_Producto WHERE Id_Cliente = @C_IdPersona;
+        DELETE FROM dbo.T_Calculo_Riesgo WHERE Id_Cliente = @C_IdPersona;
+        DELETE FROM dbo.T_Cliente WHERE C_IdPersona = @C_IdPersona;
+        DELETE FROM dbo.T_Persona WHERE C_IdPersona = @C_IdPersona;
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_EliminarProducto] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_EliminarProducto]
+    @D_NumeroProducto VARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        DECLARE @Id_Producto INT;
+        SELECT @Id_Producto = Id_Producto FROM dbo.T_Producto WHERE D_NumeroProducto = @D_NumeroProducto;
+        
+        IF @Id_Producto IS NOT NULL
+        BEGIN
+            -- Se borran primero las transacciones para mantener integridad referencial
+            DELETE FROM dbo.T_Transaccion WHERE Id_Producto = @Id_Producto;
+            DELETE FROM dbo.T_Producto WHERE Id_Producto = @Id_Producto;
+        END
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_EliminarTipoProducto] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE   PROCEDURE [dbo].[sp_EliminarTipoProducto]
+    @IdProducto INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DELETE FROM T_Tipo_Producto_Servicio_Legitimacion
+    WHERE Id_Tipo_Producto_Servicio_Legitimacion = @IdProducto;
+END
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_EliminarTransaccion] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_EliminarTransaccion]
+    @Id_Transaccion INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        DELETE FROM dbo.T_Transaccion WHERE Id_Transaccion = @Id_Transaccion;
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_GenerarDatosXML_Sicveca] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+-- ============================================================
+-- SP GENERACIÓN XML SICVECA — Ejecutar en SQL Server
+-- Devuelve 14 result sets: RS0=cabecera, RS1-RS13=Cuadros A-L
+-- ============================================================
+CREATE   PROCEDURE [dbo].[sp_GenerarDatosXML_Sicveca]
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    /* ── TRIMESTRE ACTUAL ───────────────────────────────────── */
+    DECLARE @Anio INT  = YEAR(GETDATE());
+    DECLARE @Mes  INT  = MONTH(GETDATE());
+    DECLARE @Trim INT  = CEILING(@Mes / 3.0);
+    DECLARE @M1   INT  = (@Trim - 1) * 3 + 1;
+    DECLARE @M2   INT  = @M1 + 1;
+    DECLARE @M3   INT  = @M1 + 2;
+
+    DECLARE @Meses TABLE (Mes INT);
+    INSERT INTO @Meses VALUES (@M1), (@M2), (@M3);
+
+    /* ── REGISTRO SICVECA ───────────────────────────────────── */
+    DECLARE @IdReg INT = ISNULL((SELECT MAX(Id_Registro) FROM T_Registro), 0) + 1;
+    INSERT INTO T_Registro (Id_Registro, T_Accion, N_Anio)
+    VALUES (@IdReg, 'insertar', @Anio);
+
+    /* ── RS 0: CABECERA ─────────────────────────────────────── */
+    SELECT @Anio AS Anio, @Trim AS Trimestre,
+           @M1 AS Mes1, @M2 AS Mes2, @M3 AS Mes3, @IdReg AS IdRegistro;
+
+    /* ── TABLAS TEMPORALES BASE ─────────────────────────────── */
+
+    -- Último riesgo por cliente activo
+    SELECT r.Id_Cliente, r.C_TipoRiesgo, tr.D_Descripcion AS DescRiesgo
+    INTO #Riesgo
+    FROM (
+        SELECT *, ROW_NUMBER() OVER (PARTITION BY Id_Cliente ORDER BY F_FechaCalculo DESC) AS rn
+        FROM T_Calculo_Riesgo
+    ) r
+    JOIN T_Tipo_Riesgo_Legitimacion tr ON r.C_TipoRiesgo = tr.Id_Tipo_Riesgo_Legitimacion
+    JOIN T_Cliente c ON r.Id_Cliente = c.Id_Cliente
+    WHERE r.rn = 1 AND c.N_Estado IN (1, 2);
+
+    -- Clientes activos sin cálculo de riesgo → Bajo por defecto
+    INSERT INTO #Riesgo (Id_Cliente, C_TipoRiesgo, DescRiesgo)
+    SELECT c.Id_Cliente, 1, 'Bajo'
+    FROM T_Cliente c
+    WHERE c.N_Estado IN (1, 2)
+      AND NOT EXISTS (SELECT 1 FROM #Riesgo x WHERE x.Id_Cliente = c.Id_Cliente);
+
+    DECLARE @Total INT = (SELECT COUNT(*) FROM #Riesgo);
+    IF @Total = 0 SET @Total = 1; -- evitar división por cero
+
+    -- Saldos por cliente: Activas (tipos <=6), Pasivas (7-13), FueraBalance (>=14)
+    SELECT
+        p.Id_Cliente,
+        SUM(CASE WHEN p.C_TipoProducto <= 6               THEN p.M_Saldo ELSE 0 END) AS SaldoActivo,
+        SUM(CASE WHEN p.C_TipoProducto BETWEEN 7 AND 13   THEN p.M_Saldo ELSE 0 END) AS SaldoPasivo,
+        SUM(CASE WHEN p.C_TipoProducto >= 14              THEN p.M_Saldo ELSE 0 END) AS SaldoFuera
+    INTO #Saldos
+    FROM T_Producto p
+    JOIN T_Cliente c ON p.Id_Cliente = c.Id_Cliente
+    WHERE c.N_Estado IN (1, 2)
+    GROUP BY p.Id_Cliente;
+
+    DECLARE @SA NUMERIC(22,2) = ISNULL((SELECT SUM(SaldoActivo) FROM #Saldos), 0);
+    DECLARE @SP NUMERIC(22,2) = ISNULL((SELECT SUM(SaldoPasivo) FROM #Saldos), 0);
+    DECLARE @SF NUMERIC(22,2) = ISNULL((SELECT SUM(SaldoFuera)  FROM #Saldos), 0);
+    DECLARE @ST NUMERIC(22,2) = @SA + @SP + @SF;
+    IF @SA = 0 SET @SA = 1;
+    IF @SP = 0 SET @SP = 1;
+    IF @SF = 0 SET @SF = 1;
+    IF @ST = 0 SET @ST = 1;
+
+    /* ── RS 1: CUADRO A — Total clientes por riesgo ─────────── */
+    SELECT m.Mes, r.C_TipoRiesgo, r.DescRiesgo AS TipoRiesgo,
+           COUNT(r.Id_Cliente) AS TotalClientes
+    FROM #Riesgo r CROSS JOIN @Meses m
+    GROUP BY m.Mes, r.C_TipoRiesgo, r.DescRiesgo
+    ORDER BY m.Mes, r.C_TipoRiesgo;
+
+    /* ── RS 2: CUADRO B — Nuevos, cerrados e inactivos ─────── */
+    SELECT m.Mes,
+           1 AS TipoOperacion,   -- Activas
+           1 AS TipoEstadoCliente, -- Nuevo
+           COUNT(c.Id_Cliente) AS NumeroClientes,
+           CAST(COUNT(c.Id_Cliente) * 100.0 / @Total AS NUMERIC(5,2)) AS PorcentajeClientes
+    FROM T_Cliente c
+    CROSS JOIN @Meses m
+    WHERE c.N_Estado IN (1,2)
+      AND YEAR(c.F_FechaRegistro) = @Anio
+      AND MONTH(c.F_FechaRegistro) = m.Mes
+    GROUP BY m.Mes
+    UNION ALL
+    SELECT m.Mes,
+           4 AS TipoOperacion,   -- Todos (cerrado)
+           2 AS TipoEstadoCliente, -- Cerrado
+           COUNT(c.Id_Cliente),
+           CAST(COUNT(c.Id_Cliente) * 100.0 / @Total AS NUMERIC(5,2))
+    FROM T_Cliente c
+    CROSS JOIN @Meses m
+    WHERE c.N_Estado NOT IN (1, 2)
+    GROUP BY m.Mes
+    UNION ALL
+    SELECT m.Mes,
+           2 AS TipoOperacion,   -- Pasivas
+           3 AS TipoEstadoCliente, -- Inactivo (sin transacciones en el trimestre)
+           COUNT(DISTINCT c.Id_Cliente),
+           CAST(COUNT(DISTINCT c.Id_Cliente) * 100.0 / @Total AS NUMERIC(5,2))
+    FROM T_Cliente c
+    CROSS JOIN @Meses m
+    WHERE c.N_Estado IN (1,2)
+      AND NOT EXISTS (
+            SELECT 1 FROM T_Transaccion t
+            JOIN T_Producto p ON t.Id_Producto = p.Id_Producto
+            WHERE p.Id_Cliente = c.Id_Cliente
+              AND YEAR(t.F_FechaTransaccion) = @Anio
+              AND MONTH(t.F_FechaTransaccion) BETWEEN @M1 AND @M3
+      )
+    GROUP BY m.Mes
+    ORDER BY Mes, TipoEstadoCliente;
+
+    /* ── RS 3: CUADRO C1 — Tipo Persona ─────────────────────── */
+    SELECT m.Mes, p.C_IdTipoPersona AS TipoPersona,
+           COUNT(r.Id_Cliente) AS NumeroClientes,
+           CAST(COUNT(r.Id_Cliente) * 100.0 / @Total AS NUMERIC(5,2)) AS PorcentajeClientes,
+           ISNULL(SUM(s.SaldoActivo + s.SaldoPasivo + s.SaldoFuera), 0) AS SaldoOperaciones,
+           CAST(ISNULL(SUM(s.SaldoActivo + s.SaldoPasivo + s.SaldoFuera), 0) * 100.0 / @ST AS NUMERIC(5,2)) AS PorcentajeSobreTotal
+    FROM #Riesgo r
+    JOIN T_Cliente c  ON r.Id_Cliente = c.Id_Cliente
+    JOIN T_Persona p  ON c.C_IdPersona = p.C_IdPersona
+    LEFT JOIN #Saldos s ON r.Id_Cliente = s.Id_Cliente
+    CROSS JOIN @Meses m
+    GROUP BY m.Mes, p.C_IdTipoPersona
+    ORDER BY m.Mes, p.C_IdTipoPersona;
+
+    /* ── RS 4: CUADRO C2 — Naturaleza (proxy: tipo persona) ─── */
+    SELECT m.Mes, p.C_IdTipoPersona AS TipoNaturaleza,
+           COUNT(r.Id_Cliente) AS NumeroClientes,
+           CAST(COUNT(r.Id_Cliente) * 100.0 / @Total AS NUMERIC(5,2)) AS PorcentajeClientes,
+           ISNULL(SUM(s.SaldoActivo + s.SaldoPasivo + s.SaldoFuera), 0) AS SaldoOperaciones,
+           CAST(ISNULL(SUM(s.SaldoActivo + s.SaldoPasivo + s.SaldoFuera), 0) * 100.0 / @ST AS NUMERIC(5,2)) AS PorcentajeSobreTotal
+    FROM #Riesgo r
+    JOIN T_Cliente c  ON r.Id_Cliente = c.Id_Cliente
+    JOIN T_Persona p  ON c.C_IdPersona = p.C_IdPersona
+    LEFT JOIN #Saldos s ON r.Id_Cliente = s.Id_Cliente
+    CROSS JOIN @Meses m
+    GROUP BY m.Mes, p.C_IdTipoPersona
+    ORDER BY m.Mes, p.C_IdTipoPersona;
+
+    /* ── RS 5: CUADRO D — Operaciones Activas ───────────────── */
+    SELECT m.Mes, r.C_TipoRiesgo, r.DescRiesgo AS TipoRiesgo,
+           COUNT(DISTINCT r.Id_Cliente) AS NumeroClientes,
+           CAST(COUNT(DISTINCT r.Id_Cliente) * 100.0 / @Total AS NUMERIC(5,2)) AS PorcentajeClientes,
+           ISNULL(SUM(s.SaldoActivo), 0) AS SaldoOperaciones,
+           CAST(ISNULL(SUM(s.SaldoActivo), 0) * 100.0 / @SA AS NUMERIC(5,2)) AS PorcentajeSobreTotal
+    FROM #Riesgo r LEFT JOIN #Saldos s ON r.Id_Cliente = s.Id_Cliente
+    CROSS JOIN @Meses m
+    GROUP BY m.Mes, r.C_TipoRiesgo, r.DescRiesgo
+    ORDER BY m.Mes, r.C_TipoRiesgo;
+
+    /* ── RS 6: CUADRO E — Operaciones Pasivas ───────────────── */
+    SELECT m.Mes, r.C_TipoRiesgo, r.DescRiesgo AS TipoRiesgo,
+           COUNT(DISTINCT r.Id_Cliente) AS NumeroClientes,
+           CAST(COUNT(DISTINCT r.Id_Cliente) * 100.0 / @Total AS NUMERIC(5,2)) AS PorcentajeClientes,
+           ISNULL(SUM(s.SaldoPasivo), 0) AS SaldoOperaciones,
+           CAST(ISNULL(SUM(s.SaldoPasivo), 0) * 100.0 / @SP AS NUMERIC(5,2)) AS PorcentajeSobreTotal
+    FROM #Riesgo r LEFT JOIN #Saldos s ON r.Id_Cliente = s.Id_Cliente
+    CROSS JOIN @Meses m
+    GROUP BY m.Mes, r.C_TipoRiesgo, r.DescRiesgo
+    ORDER BY m.Mes, r.C_TipoRiesgo;
+
+    /* ── RS 7: CUADRO F — Fuera de Balance ──────────────────── */
+    SELECT m.Mes, r.C_TipoRiesgo, r.DescRiesgo AS TipoRiesgo,
+           COUNT(DISTINCT r.Id_Cliente) AS NumeroClientes,
+           CAST(COUNT(DISTINCT r.Id_Cliente) * 100.0 / @Total AS NUMERIC(5,2)) AS PorcentajeClientes,
+           ISNULL(SUM(s.SaldoFuera), 0) AS SaldoOperaciones,
+           CAST(ISNULL(SUM(s.SaldoFuera), 0) * 100.0 / @SF AS NUMERIC(5,2)) AS PorcentajeSobreTotal
+    FROM #Riesgo r LEFT JOIN #Saldos s ON r.Id_Cliente = s.Id_Cliente
+    CROSS JOIN @Meses m
+    GROUP BY m.Mes, r.C_TipoRiesgo, r.DescRiesgo
+    ORDER BY m.Mes, r.C_TipoRiesgo;
+
+    /* ── RS 8: CUADRO G — Activas y Pasivas ─────────────────── */
+    SELECT m.Mes, r.C_TipoRiesgo, r.DescRiesgo AS TipoRiesgo,
+           COUNT(DISTINCT r.Id_Cliente) AS NumeroClientes,
+           CAST(COUNT(DISTINCT r.Id_Cliente) * 100.0 / @Total AS NUMERIC(5,2)) AS PorcentajeClientes
+    FROM #Riesgo r
+    JOIN #Saldos s ON r.Id_Cliente = s.Id_Cliente AND s.SaldoActivo > 0 AND s.SaldoPasivo > 0
+    CROSS JOIN @Meses m
+    GROUP BY m.Mes, r.C_TipoRiesgo, r.DescRiesgo
+    ORDER BY m.Mes, r.C_TipoRiesgo;
+
+    /* ── RS 9: CUADRO H — Reclasificados ────────────────────── */
+    SELECT m.Mes,
+           1 AS TipoOperacion,
+           r_nuevo.C_TipoRiesgo,
+           r_nuevo.DescRiesgo AS TipoRiesgo,
+           COUNT(DISTINCT r_nuevo.Id_Cliente) AS NumeroClientesReclasificados
+    FROM (
+        SELECT cr.Id_Cliente, cr.C_TipoRiesgo, tr.D_Descripcion AS DescRiesgo
+        FROM T_Calculo_Riesgo cr
+        JOIN T_Tipo_Riesgo_Legitimacion tr ON cr.C_TipoRiesgo = tr.Id_Tipo_Riesgo_Legitimacion
+        WHERE cr.C_TipoRiesgo <> (
+            SELECT TOP 1 cr2.C_TipoRiesgo
+            FROM T_Calculo_Riesgo cr2
+            WHERE cr2.Id_Cliente = cr.Id_Cliente
+              AND cr2.F_FechaCalculo < cr.F_FechaCalculo
+            ORDER BY cr2.F_FechaCalculo DESC
+        )
+    ) r_nuevo
+    CROSS JOIN @Meses m
+    GROUP BY m.Mes, r_nuevo.C_TipoRiesgo, r_nuevo.DescRiesgo
+    ORDER BY m.Mes, r_nuevo.C_TipoRiesgo;
+
+    /* ── RS 10: CUADRO I — Jurisdicción Residencia ──────────── */
+    SELECT m.Mes,
+           1 AS TipoResidencia,    -- Todos residentes como proxy
+           r.C_TipoRiesgo, r.DescRiesgo AS TipoRiesgo,
+           COUNT(DISTINCT r.Id_Cliente) AS NumeroClientes,
+           CAST(COUNT(DISTINCT r.Id_Cliente) * 100.0 / @Total AS NUMERIC(5,2)) AS PorcentajeClientes,
+           ISNULL(SUM(s.SaldoActivo), 0) AS SaldosActivos,
+           ISNULL(SUM(s.SaldoPasivo), 0) AS SaldosPasivos,
+           ISNULL(SUM(s.SaldoFuera),  0) AS SaldosFueraBalance
+    FROM #Riesgo r LEFT JOIN #Saldos s ON r.Id_Cliente = s.Id_Cliente
+    CROSS JOIN @Meses m
+    GROUP BY m.Mes, r.C_TipoRiesgo, r.DescRiesgo
+    ORDER BY m.Mes, r.C_TipoRiesgo;
+
+    /* ── RS 11: CUADRO J — Sujetos Obligados Art.15 ─────────── */
+    SELECT m.Mes, r.C_TipoRiesgo, r.DescRiesgo AS TipoRiesgo,
+           COUNT(DISTINCT r.Id_Cliente) AS NumeroClientes,
+           CAST(COUNT(DISTINCT r.Id_Cliente) * 100.0 / @Total AS NUMERIC(5,2)) AS PorcentajeClientes
+    FROM #Riesgo r
+    JOIN T_Cliente c ON r.Id_Cliente = c.Id_Cliente
+    JOIN T_Persona p ON c.C_IdPersona = p.C_IdPersona AND p.C_IdTipoPersona = 2
+    CROSS JOIN @Meses m
+    GROUP BY m.Mes, r.C_TipoRiesgo, r.DescRiesgo
+    ORDER BY m.Mes, r.C_TipoRiesgo;
+
+    /* ── RS 12: CUADRO K — PEP (proxy: riesgo Alto) ─────────── */
+    SELECT m.Mes, r.C_TipoRiesgo, r.DescRiesgo AS TipoRiesgo,
+           COUNT(DISTINCT r.Id_Cliente) AS NumeroClientes,
+           CAST(COUNT(DISTINCT r.Id_Cliente) * 100.0 / @Total AS NUMERIC(5,2)) AS PorcentajeClientes,
+           ISNULL(SUM(s.SaldoActivo), 0) AS SaldosActivos,
+           ISNULL(SUM(s.SaldoPasivo), 0) AS SaldosPasivos,
+           ISNULL(SUM(s.SaldoFuera),  0) AS SaldosFueraBalance
+    FROM #Riesgo r LEFT JOIN #Saldos s ON r.Id_Cliente = s.Id_Cliente
+    CROSS JOIN @Meses m
+    WHERE r.DescRiesgo = 'Alto'
+    GROUP BY m.Mes, r.C_TipoRiesgo, r.DescRiesgo
+    ORDER BY m.Mes;
+
+    /* ── RS 13: CUADRO L — Operaciones > 100 salarios ───────── */
+    SELECT m.Mes, r.C_TipoRiesgo, r.DescRiesgo AS TipoRiesgo,
+           COUNT(DISTINCT p_c.Id_Cliente) AS NumeroClientes,
+           CAST(COUNT(DISTINCT p_c.Id_Cliente) * 100.0 / @Total AS NUMERIC(5,2)) AS PorcentajeClientes,
+           ISNULL(SUM(t.M_Monto), 0) AS TotalIngresos
+    FROM T_Transaccion t
+    JOIN T_Producto pr  ON t.Id_Producto   = pr.Id_Producto
+    JOIN T_Cliente  p_c ON pr.Id_Cliente   = p_c.Id_Cliente
+    JOIN #Riesgo    r   ON p_c.Id_Cliente  = r.Id_Cliente
+    CROSS JOIN @Meses m
+    WHERE t.M_Monto > 5000000
+    GROUP BY m.Mes, r.C_TipoRiesgo, r.DescRiesgo
+    ORDER BY m.Mes, r.C_TipoRiesgo;
+
+    /* ── LIMPIEZA ─────────────────────────────────────────────── */
+    DROP TABLE #Riesgo;
+    DROP TABLE #Saldos;
+END
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_GenerarXML_Sicveca] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE   PROCEDURE [dbo].[sp_GenerarXML_Sicveca]
+    @Anio INT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- 1. Parámetros dinámicos
+    DECLARE @AnioFinal INT = ISNULL(@Anio, YEAR(GETDATE()));
+    DECLARE @MesLimite INT = CASE WHEN @AnioFinal = YEAR(GETDATE()) THEN MONTH(GETDATE()) ELSE 12 END;
+    DECLARE @MontoRef DECIMAL(18,2);
+    SELECT @MontoRef = CAST(D_Valor AS DECIMAL(18,2)) FROM T_Cat_Parametro WHERE D_Clave = 'MONTO_100_SALARIOS';
+    SET @MontoRef = ISNULL(@MontoRef, 34000000.00);
+
+    -- 2. Procesamiento de cuadros (Simplificado para brevedad, debe replicar la lógica para A-L)
+    -- Ejemplo: Cuadro A
+    SELECT tr.Trimestre, rl.D_Descripcion AS NivelRiesgo, COUNT(DISTINCT cr.Id_Cliente) AS TotalClientes
+    INTO #CuadroA
+    FROM (SELECT 1 AS Trimestre UNION SELECT 2 UNION SELECT 3 UNION SELECT 4) tr
+    CROSS JOIN T_Tipo_Riesgo_Legitimacion rl
+    LEFT JOIN T_Calculo_Riesgo cr ON cr.C_TipoRiesgo = rl.Id_Tipo_Riesgo_Legitimacion
+    GROUP BY tr.Trimestre, rl.D_Descripcion;
+
+    -- 3. Generación XML (Ajustar para incluir nodos del A al L)
+    DECLARE @NombreArchivo VARCHAR(255) = 'SICVECA_REPORTE_' + CAST(@AnioFinal AS VARCHAR) + '.xml';
+    
+    SELECT 
+        (SELECT Trimestre, NivelRiesgo, TotalClientes FROM #CuadroA FOR XML PATH('Elemento'), TYPE) AS "ListaRiesgos"
+    FOR XML PATH('SICVECA'), ROOT('Reporte');
+
+    DROP TABLE #CuadroA;
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_GuardarRiesgoManual] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_GuardarRiesgoManual]
+    @Id_Cliente INT,
+    @P_1 NUMERIC(5,2),
+    @P_2 NUMERIC(5,2),
+    @P_3 NUMERIC(5,2),
+    @P_4 NUMERIC(5,2),
+    @P_5 NUMERIC(5,2),
+    @P_6 NUMERIC(5,2),
+    @P_7 NUMERIC(5,2),
+    @P_8 NUMERIC(5,2)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @PuntajeTotal NUMERIC(5,2) = @P_1 + @P_2 + @P_3 + @P_4 + @P_5 + @P_6 + @P_7 + @P_8;
+    DECLARE @TipoPersona INT = 1;
+    DECLARE @NivelRiesgo INT;
+
+    SELECT @TipoPersona = P.C_IdTipoPersona 
+    FROM T_Cliente C
+    INNER JOIN T_Persona P ON C.C_IdPersona = P.C_IdPersona
+    WHERE C.Id_Cliente = @Id_Cliente;
+
+    IF @PuntajeTotal <= 33.0 SET @NivelRiesgo = 3;
+    ELSE IF @PuntajeTotal <= 66.0 SET @NivelRiesgo = 2;
+    ELSE SET @NivelRiesgo = 1;
+
+    DECLARE @NuevoId INT;
+    SELECT @NuevoId = ISNULL(MAX(Id_Calculo_Riesgo), 0) + 1 FROM T_Calculo_Riesgo;
+
+    INSERT INTO T_Calculo_Riesgo (Id_Calculo_Riesgo, Id_Cliente, C_IdTipoPersona, N_PuntajeTotal, C_TipoRiesgo, F_FechaCalculo)
+    VALUES (@NuevoId, @Id_Cliente, @TipoPersona, @PuntajeTotal, @NivelRiesgo, GETDATE());
+
+    SELECT 
+        @PuntajeTotal AS PuntajeTotal, 
+        @NivelRiesgo AS NivelRiesgo,
+        CASE 
+            WHEN @NivelRiesgo = 3 THEN 'Bajo'
+            WHEN @NivelRiesgo = 2 THEN 'Medio'
+            ELSE 'Alto' 
+        END AS DescripcionRiesgo;
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_InsertarProducto] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_InsertarProducto]
+    @D_NumeroProducto VARCHAR(50),
+    @Id_Cliente INT,
+    @C_TipoProducto INT,
+    @M_Saldo DECIMAL(18, 2)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        DECLARE @NuevoIdProducto INT;
+        SELECT @NuevoIdProducto = ISNULL(MAX(Id_Producto), 0) + 1 FROM dbo.T_Producto;
+
+        IF NOT EXISTS (SELECT 1 FROM dbo.T_Cliente WHERE Id_Cliente = @Id_Cliente)
+        BEGIN
+            INSERT INTO dbo.T_Cliente (Id_Cliente, C_IdPersona, F_FechaRegistro, N_Estado)
+            VALUES (@Id_Cliente, @Id_Cliente, GETDATE(), 2);
+        END
+
+        INSERT INTO dbo.T_Producto (Id_Producto, Id_Cliente, C_TipoProducto, C_IdMoneda, D_NumeroProducto, F_FechaApertura, M_Saldo, N_Estado)
+        VALUES (@NuevoIdProducto, @Id_Cliente, @C_TipoProducto, 1, @D_NumeroProducto, GETDATE(), @M_Saldo, 2);
+        
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_InsertarTipoProducto] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE   PROCEDURE [dbo].[sp_InsertarTipoProducto]
+    @IdProducto INT,
+    @Nombre     VARCHAR(200)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO T_Tipo_Producto_Servicio_Legitimacion (Id_Tipo_Producto_Servicio_Legitimacion, D_Descripcion, N_Estado)
+    VALUES (@IdProducto, @Nombre, 1);
+END
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_InsertarTransaccion] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_InsertarTransaccion]
+    @Id_Producto_Ref VARCHAR(50),
+    @M_Monto DECIMAL(18, 2),
+    @C_IdTipoTransaccion INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        DECLARE @Id_Producto INT, @SaldoActual DECIMAL(18, 2), @NuevoSaldo DECIMAL(18, 2), @NuevoIdTransaccion INT;
+
+        SELECT @Id_Producto = Id_Producto, @SaldoActual = M_Saldo
+        FROM dbo.T_Producto WHERE D_NumeroProducto = @Id_Producto_Ref;
+
+        IF @Id_Producto IS NULL THROW 50001, 'El producto especificado no existe.', 1;
+
+        IF @C_IdTipoTransaccion = 1
+            SET @NuevoSaldo = @SaldoActual + @M_Monto;
+        ELSE IF @C_IdTipoTransaccion = 2
+        BEGIN
+            IF @SaldoActual < @M_Monto THROW 50002, 'Fondos insuficientes.', 1;
+            SET @NuevoSaldo = @SaldoActual - @M_Monto;
+        END
+
+        SELECT @NuevoIdTransaccion = ISNULL(MAX(Id_Transaccion), 0) + 1 FROM dbo.T_Transaccion;
+
+        INSERT INTO dbo.T_Transaccion (Id_Transaccion, Id_Producto, C_IdTipoTransaccion, C_IdMoneda, F_FechaTransaccion, M_Monto, M_SaldoDespues)
+        VALUES (@NuevoIdTransaccion, @Id_Producto, @C_IdTipoTransaccion, 1, GETDATE(), @M_Monto, @NuevoSaldo);
+
+        UPDATE dbo.T_Producto SET M_Saldo = @NuevoSaldo WHERE Id_Producto = @Id_Producto;
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_LeerPersona] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE   PROCEDURE [dbo].[sp_LeerPersona]
+    @C_IdPersona INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT * FROM dbo.fn_LeerPersona(@C_IdPersona);
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_LeerProducto] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE   PROCEDURE [dbo].[sp_LeerProducto]
+    @D_NumeroProducto VARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT * FROM dbo.fn_LeerProducto(@D_NumeroProducto);
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_LeerProductosCliente] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- ==========================================
+-- PROCEDIMIENTOS DE LECTURA (Envolturas para Funciones)
+-- ==========================================
+
+CREATE   PROCEDURE [dbo].[sp_LeerProductosCliente]
+    @C_IdPersona INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT * FROM dbo.fn_LeerProductosCliente(@C_IdPersona);
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_LeerTransaccion] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE   PROCEDURE [dbo].[sp_LeerTransaccion]
+    @Id_Transaccion INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT * FROM dbo.fn_LeerTransaccion(@Id_Transaccion);
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ObtenerCantones] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_ObtenerCantones]
+    @Id_Provincia INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT Id_Canton, D_NombreCanton 
+    FROM dbo.T_Canton WITH (NOLOCK)
+    WHERE Id_Provincia = @Id_Provincia 
+    ORDER BY D_NombreCanton;
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ObtenerCatalogoEstadoCivil] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE   PROCEDURE [dbo].[sp_ObtenerCatalogoEstadoCivil]
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT C_IdEstadoCivil, D_Descripcion FROM T_EstadoCivil WHERE N_Estado = 1;
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ObtenerCategoriasTransaccion] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE   PROCEDURE [dbo].[sp_ObtenerCategoriasTransaccion]
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT * FROM dbo.fn_ObtenerCategoriasTransaccion();
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ObtenerClientesRandomConProductos] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- ── 4. SP PARA OBTENER CLIENTES RANDOM CON PRODUCTOS ───
+CREATE   PROCEDURE [dbo].[sp_ObtenerClientesRandomConProductos]
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT TOP 5
+           c.Id_Cliente,
+           p.D_Nombre,
+           p.D_PrimerApellido
+    FROM T_Producto prod
+    JOIN T_Cliente c ON prod.Id_Cliente = c.Id_Cliente
+    JOIN T_Persona p ON c.C_IdPersona = p.C_IdPersona
+    GROUP BY c.Id_Cliente, p.D_Nombre, p.D_PrimerApellido
+    HAVING COUNT(prod.Id_Producto) > 0
+    ORDER BY NEWID();
+END
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ObtenerDatosXML_Sicveca] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_ObtenerDatosXML_Sicveca]
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @Anio INT = YEAR(GETDATE());
+    DECLARE @MesActual INT = MONTH(GETDATE());
+    DECLARE @TotalClientes INT;
+
+    -- Extraer cantidad de clientes (asumiendo logica de sp_ObtenerTotalClientesXML)
+    SELECT @TotalClientes = COUNT(*) FROM T_Cliente WHERE N_Estado = 1;
+
+    -- ========================================================
+    -- REGLAS DE VALIDACION DE NEGOCIO (Migradas desde Node.js)
+    -- ========================================================
+    IF @Anio < 2014
+        THROW 50001, 'Validacion fallida: Anio invalido. Debe ser mayor a 2013.', 1;
+
+    IF @MesActual < 1 OR @MesActual > 12
+        THROW 50002, 'Validacion fallida: Mes invalido. Debe estar entre 1 y 12.', 1;
+
+    IF @TotalClientes < 0
+        THROW 50003, 'Validacion fallida: La cantidad de clientes no puede ser un valor negativo.', 1;
+
+    -- Almacenar temporalmente las transferencias para validar montos
+    CREATE TABLE #TempTransferencias (
+        C_TipoProducto INT,
+        MontoTotal NUMERIC(22,2)
+    );
+
+    -- Llenar la tabla temporal invocando el SP original de transferencias
+    INSERT INTO #TempTransferencias (C_TipoProducto, MontoTotal)
+    EXEC dbo.sp_ObtenerTotalesTransferenciasRemesasXML;
+
+    -- Validar integridad de montos
+    IF EXISTS (SELECT 1 FROM #TempTransferencias WHERE MontoTotal < 0)
+    BEGIN
+        DROP TABLE #TempTransferencias;
+        THROW 50004, 'Validacion fallida: Existen montos negativos en las transferencias.', 1;
+    END
+
+    -- ========================================================
+    -- RETORNO DE CONJUNTOS DE DATOS
+    -- ========================================================
+    
+    -- ResultSet 1: Datos de Cabecera
+    SELECT 
+        @Anio AS Anio, 
+        @MesActual AS MesActual, 
+        @TotalClientes AS TotalClientes;
+
+    -- ResultSet 2: Datos de Transferencias
+    SELECT 
+        C_TipoProducto, 
+        MontoTotal 
+    FROM #TempTransferencias;
+
+    DROP TABLE #TempTransferencias;
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ObtenerDistritos] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_ObtenerDistritos]
+    @Id_Canton INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT Id_Distrito, D_NombreDistrito 
+    FROM dbo.T_Distrito WITH (NOLOCK)
+    WHERE Id_Canton = @Id_Canton 
+    ORDER BY D_NombreDistrito;
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ObtenerHistorialComisiones] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE   PROCEDURE [dbo].[sp_ObtenerHistorialComisiones]
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        Id_Historial,
+        CONVERT(VARCHAR(19), F_Fecha, 120) AS F_Fecha,
+        C_IdTipoComision,
+        D_TipoComision,
+        N_Cantidad,
+        M_Monto,
+        SUM(M_Monto) OVER (
+            PARTITION BY C_IdTipoComision
+            ORDER BY F_Fecha
+            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+        ) AS M_AcumuladoPorTipo
+    FROM T_Historial_Comisiones
+    ORDER BY F_Fecha DESC, C_IdTipoComision;
+
+    SELECT
+        CONVERT(VARCHAR(10), F_Fecha, 120) AS Dia,
+        SUM(M_Monto)                       AS TotalDia,
+        SUM(N_Cantidad)                    AS TotalOperaciones
+    FROM T_Historial_Comisiones
+    GROUP BY CONVERT(VARCHAR(10), F_Fecha, 120)
+    ORDER BY Dia DESC;
+END
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ObtenerMesesActivos] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+-- ==========================================
+-- PROCEDIMIENTOS ALMACENADOS
+-- ==========================================
+
+CREATE   PROCEDURE [dbo].[sp_ObtenerMesesActivos]
+    @MesActual INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT Id_Mes AS numero, D_NombreMes AS nombre 
+    FROM T_Meses 
+    WHERE Id_Mes <= @MesActual
+    ORDER BY Id_Mes ASC;
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ObtenerParametro] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE   PROCEDURE [dbo].[sp_ObtenerParametro]
+    @Id_Parametro VARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT Valor_Numerico, Valor_Texto 
+    FROM T_Parametros_Sistema 
+    WHERE Id_Parametro = @Id_Parametro;
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ObtenerPerfilClienteSimulado] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE   PROCEDURE [dbo].[sp_ObtenerPerfilClienteSimulado]
+    @C_IdPersona INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    -- El motor genera los datos aleatorios necesarios de forma segura
+    SELECT 
+        GETDATE() AS F_FechaRegistro,
+        DATEADD(YEAR, -ABS(CHECKSUM(NEWID()) % 50 + 20), GETDATE()) AS F_FechaNacimiento,
+        ABS(CHECKSUM(NEWID()) % 3000000 + 500000) AS M_Ingresos,
+        'Asalariado' AS D_Profesion,
+        'Soltero(a)' AS D_EstadoCivil
+    FROM T_Persona
+    WHERE C_IdPersona = @C_IdPersona;
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ObtenerPersonasRandomPadron] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_ObtenerPersonasRandomPadron]
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT TOP 50 
+        D_Cedula,
+        D_PrimerNombre,
+        D_PrimerApellido
+    FROM dbo.T_Padron
+    WHERE Id_Padron NOT IN (
+        SELECT Id_Padron 
+        FROM dbo.T_Persona 
+        WHERE Id_Padron IS NOT NULL
+    )
+    ORDER BY NEWID();
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ObtenerProductosCliente] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_ObtenerProductosCliente]
+    @C_IdPersona INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT 
+        Id_Producto,
+        Id_Cliente,
+        C_TipoProducto,
+        D_NumeroProducto,
+        M_Saldo,
+        F_FechaApertura
+    FROM dbo.T_Producto WITH (NOLOCK)
+    WHERE Id_Cliente = @C_IdPersona
+      AND N_Estado = 2;
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ObtenerProductosPorCliente] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE   PROCEDURE [dbo].[sp_ObtenerProductosPorCliente]
+    @Id_Cliente VARCHAR(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    -- Se hace un JOIN con T_Persona por si el backend pasa la cédula en lugar del Id interno
+    SELECT 
+        prod.D_NumeroProducto, 
+        prod.C_TipoProducto, 
+        prod.M_Saldo
+    FROM T_Producto prod
+    JOIN T_Cliente c ON prod.Id_Cliente = c.Id_Cliente
+    JOIN T_Persona p ON c.C_IdPersona = p.C_IdPersona
+    WHERE CAST(p.C_IdPersona AS VARCHAR(20)) = @Id_Cliente;
+END
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ObtenerProvincias] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_ObtenerProvincias]
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT Id_Provincia, D_NombreProvincia 
+    FROM dbo.T_Provincia WITH (NOLOCK)
+    ORDER BY D_NombreProvincia;
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ObtenerTiposProductos] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE   PROCEDURE [dbo].[sp_ObtenerTiposProductos]
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT 
+        Id_Tipo_Producto_Servicio_Legitimacion AS IdProducto, 
+        D_Descripcion AS Nombre
+    FROM T_Tipo_Producto_Servicio_Legitimacion
+    ORDER BY Id_Tipo_Producto_Servicio_Legitimacion;
+END
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ObtenerTodasTransacciones] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_ObtenerTodasTransacciones]
+    @Termino VARCHAR(100) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @Termino IS NULL OR @Termino = ''
+    BEGIN
+        SELECT 
+            Tx.Id_Transaccion,
+            P.D_NumeroProducto,
+            Tx.C_IdTipoTransaccion,
+            Tx.M_Monto,
+            Pe.C_IdPersona AS CedulaCliente,
+            ISNULL(Pe.D_Nombre, '') + ' ' + ISNULL(Pe.D_PrimerApellido, '') AS NombreCliente
+        FROM T_Transaccion Tx
+        INNER JOIN T_Producto P ON Tx.Id_Producto = P.Id_Producto
+        INNER JOIN T_Cliente C ON P.Id_Cliente = C.Id_Cliente
+        INNER JOIN T_Persona Pe ON C.C_IdPersona = Pe.C_IdPersona
+        ORDER BY Tx.Id_Transaccion DESC;
+    END
+    ELSE
+    BEGIN
+        SELECT 
+            Tx.Id_Transaccion,
+            P.D_NumeroProducto,
+            Tx.C_IdTipoTransaccion,
+            Tx.M_Monto,
+            Pe.C_IdPersona AS CedulaCliente,
+            ISNULL(Pe.D_Nombre, '') + ' ' + ISNULL(Pe.D_PrimerApellido, '') AS NombreCliente
+        FROM T_Transaccion Tx
+        INNER JOIN T_Producto P ON Tx.Id_Producto = P.Id_Producto
+        INNER JOIN T_Cliente C ON P.Id_Cliente = C.Id_Cliente
+        INNER JOIN T_Persona Pe ON C.C_IdPersona = Pe.C_IdPersona
+        WHERE 
+            CAST(Tx.Id_Transaccion AS VARCHAR) = @Termino OR
+            P.D_NumeroProducto LIKE '%' + @Termino + '%' OR
+            ISNULL(Pe.D_Nombre, '') LIKE '%' + @Termino + '%' OR
+            CAST(Pe.C_IdPersona AS VARCHAR) LIKE '%' + @Termino + '%'
+        ORDER BY Tx.Id_Transaccion DESC;
+    END
+END
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ObtenerTodosProductos] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE   PROCEDURE [dbo].[sp_ObtenerTodosProductos]
+    @Termino VARCHAR(100) = NULL  -- Parámetro opcional para el buscador
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        P.D_NumeroProducto, 
+        C.C_IdPersona AS C_IdPersona, 
+        CONCAT(PER.D_Nombre, ' ', PER.D_PrimerApellido) AS NombreCliente,
+        P.C_TipoProducto,
+        CAT.D_Descripcion AS NombreProducto,
+        P.M_Saldo 
+    FROM dbo.T_Producto P
+    INNER JOIN dbo.T_Cliente C ON P.Id_Cliente = C.Id_Cliente
+    INNER JOIN dbo.T_Persona PER ON C.C_IdPersona = PER.C_IdPersona
+    INNER JOIN dbo.T_Tipo_Producto_Servicio_Legitimacion CAT 
+        ON P.C_TipoProducto = CAT.Id_Tipo_Producto_Servicio_Legitimacion
+    WHERE (@Termino IS NULL OR @Termino = ''
+           OR P.D_NumeroProducto LIKE '%' + @Termino + '%'
+           OR CAT.D_Descripcion LIKE '%' + @Termino + '%')
+    ORDER BY P.D_NumeroProducto ASC;
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ObtenerTotalClientesXML] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_ObtenerTotalClientesXML]
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT COUNT(C_IdPersona) AS CantidadClientes FROM dbo.T_Persona;
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ObtenerTotalesTransferenciasRemesasXML] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_ObtenerTotalesTransferenciasRemesasXML]
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT C_TipoProducto, SUM(M_Saldo) AS MontoTotal
+    FROM dbo.T_Producto
+    WHERE C_TipoProducto IN (13, 14)
+    GROUP BY C_TipoProducto;
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_ProcesarRiesgoMasivo] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE PROCEDURE [dbo].[sp_ProcesarRiesgoMasivo]
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        DELETE FROM dbo.T_Calculo_Riesgo;
+
+        -- Extraer datos base incluyendo la sumatoria de ingresos reales
+        SELECT 
+            c.Id_Cliente,
+            p.C_IdTipoPersona,
+            ISNULL((SELECT SUM(M_Monto) FROM dbo.T_PersonaIngreso WHERE C_IdPersona = p.C_IdPersona), 0) AS IngresosTotales,
+            ISNULL((SELECT TOP 1 Id_Provincia FROM dbo.T_PersonaUbicacion WHERE C_IdPersona = p.C_IdPersona), 4) AS Id_Provincia
+        INTO #TempBase
+        FROM dbo.T_Cliente c
+        INNER JOIN dbo.T_Persona p ON c.C_IdPersona = p.C_IdPersona
+        WHERE c.N_Estado = 2;
+
+        -- Calcular los puntajes con las reglas de negocio actualizadas
+        SELECT 
+            Id_Cliente,
+            C_IdTipoPersona,
+            (
+                -- Base por tipo de persona
+                CASE WHEN C_IdTipoPersona = 1 THEN 10.0 ELSE 25.0 END
+                +
+                -- Lógica Inversa de Ingresos
+                CASE 
+                    WHEN IngresosTotales >= 100000000 THEN 1.0
+                    WHEN IngresosTotales > 500000 THEN 3.0
+                    WHEN IngresosTotales >= 300000 AND IngresosTotales <= 500000 THEN 6.0
+                    WHEN IngresosTotales > 100000 AND IngresosTotales < 300000 THEN 10.0
+                    ELSE 12.5
+                END
+                +
+                -- Lógica Estado Civil vinculada a Ingresos
+                CASE
+                    WHEN IngresosTotales > 500000 THEN 2.5
+                    WHEN IngresosTotales >= 300000 AND IngresosTotales <= 500000 THEN 6.5
+                    ELSE 11.0
+                END
+                +
+                -- Lógica Geográfica
+                CASE 
+                    WHEN Id_Provincia IN (6,7) THEN 12.0 
+                    WHEN Id_Provincia IN (4,3) THEN 5.0 
+                    ELSE 8.0 
+                END
+            ) AS PuntajeCalculado
+        INTO #TempRiesgo
+        FROM #TempBase;
+
+        -- Inserción final con evaluación de nivel
+        INSERT INTO dbo.T_Calculo_Riesgo (
+            Id_Calculo_Riesgo, Id_Cliente, C_IdTipoPersona, N_PuntajeTotal, C_TipoRiesgo, F_FechaCalculo
+        )
+        SELECT 
+            ROW_NUMBER() OVER(ORDER BY Id_Cliente),
+            Id_Cliente,
+            C_IdTipoPersona,
+            PuntajeCalculado,
+            CASE 
+                WHEN PuntajeCalculado >= 67.0 THEN 1 -- Alto
+                WHEN PuntajeCalculado >= 34.0 AND PuntajeCalculado < 67.0 THEN 2 -- Medio
+                ELSE 3 -- Bajo
+            END,
+            GETDATE()
+        FROM #TempRiesgo;
+
+        DROP TABLE #TempBase;
+        DROP TABLE #TempRiesgo;
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_RegistrarClienteCompleto] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+-- 2. Sobrescribimos el SP con lógica defensiva (TRY...CATCH)
+CREATE   PROCEDURE [dbo].[sp_RegistrarClienteCompleto]
+    @C_IdPersona VARCHAR(20),
+    @D_Nombre VARCHAR(200),
+    @D_PrimerApellido VARCHAR(50),
+    @C_IdTipoPersona INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    DECLARE @IdPersonaInt INT = CAST(@C_IdPersona AS INT);
+
+    BEGIN TRY
+        -- Paso A: Insertar en T_Persona si no existe
+        IF NOT EXISTS (SELECT 1 FROM dbo.T_Persona WHERE C_IdPersona = @IdPersonaInt)
+        BEGIN
+            INSERT INTO dbo.T_Persona (C_IdPersona, C_IdTipoPersona, D_Nombre, D_PrimerApellido, F_FechaRegistro)
+            VALUES (@IdPersonaInt, @C_IdTipoPersona, @D_Nombre, @D_PrimerApellido, GETDATE());
+        END
+        ELSE
+        BEGIN
+            -- Actualizamos datos básicos si la persona ya existía
+            UPDATE dbo.T_Persona 
+            SET D_Nombre = @D_Nombre, D_PrimerApellido = @D_PrimerApellido
+            WHERE C_IdPersona = @IdPersonaInt;
+        END
+
+        -- Paso B: Insertar en T_Cliente para evitar el error UQ_Cliente_Persona
+        IF NOT EXISTS (SELECT 1 FROM dbo.T_Cliente WHERE C_IdPersona = @IdPersonaInt)
+        BEGIN
+            -- Generar un Id_Cliente consecutivo
+            DECLARE @NuevoIdCliente INT;
+            SELECT @NuevoIdCliente = ISNULL(MAX(Id_Cliente), 0) + 1 FROM dbo.T_Cliente;
+
+            INSERT INTO dbo.T_Cliente (Id_Cliente, C_IdPersona, F_FechaRegistro, Q_FrecuenciaConsulta, N_Estado)
+            VALUES (@NuevoIdCliente, @IdPersonaInt, GETDATE(), 0, 2);
+        END
+    END TRY
+    BEGIN CATCH
+        -- Si ocurre una violación de UNIQUE KEY, SQL Server la atrapa aquí 
+        -- y evita que el error viaje hasta tu servidor Node.js
+        PRINT 'Choque de llaves evitado. El cliente ya estaba registrado.';
+    END CATCH
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_RegistrarHistorialComision] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+-- 2. SP - REGISTRAR UNA FILA DE HISTORIAL (una por tipo de comision por ejecucion)
+CREATE   PROCEDURE [dbo].[sp_RegistrarHistorialComision]
+    @C_IdTipoComision INT,
+    @D_TipoComision   VARCHAR(100),
+    @N_Cantidad       INT,
+    @M_Monto          DECIMAL(22,2)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO T_Historial_Comisiones (C_IdTipoComision, D_TipoComision, N_Cantidad, M_Monto)
+    VALUES (@C_IdTipoComision, @D_TipoComision, @N_Cantidad, @M_Monto);
+END
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_RegistrarVisitaCliente] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE PROCEDURE [dbo].[sp_RegistrarVisitaCliente]
+    @C_IdPersona INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        -- 1. Insertamos en el histórico
+        INSERT INTO dbo.T_Historial_Consultas (Id_Cliente, F_FechaConsulta)
+        SELECT Id_Cliente, GETDATE()
+        FROM dbo.T_Cliente WHERE C_IdPersona = @C_IdPersona;
+
+        -- 2. Incremento simple de 1 en 1
+        UPDATE dbo.T_Cliente
+        SET Q_FrecuenciaConsulta = Q_FrecuenciaConsulta + 1
+        WHERE C_IdPersona = @C_IdPersona;
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END;
+GO
+/****** Objeto: StoredProcedure [dbo].[sp_VerificarPersonaExiste] Fecha de script: 22/6/2026 21:55:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE   PROCEDURE [dbo].[sp_VerificarPersonaExiste]
+    @C_IdPersona VARCHAR(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @Existe INT = 0;
+    DECLARE @IdPersonaInt INT = CAST(@C_IdPersona AS INT);
+    
+    -- Validamos estrictamente contra T_Cliente para evitar la violación de UQ_Cliente_Persona
+    IF EXISTS (SELECT 1 FROM dbo.T_Cliente WHERE C_IdPersona = @IdPersonaInt)
+    BEGIN
+        SET @Existe = 1;
+    END
+    -- Si no está en T_Cliente, verificamos si al menos está en T_Persona
+    ELSE IF EXISTS (SELECT 1 FROM dbo.T_Persona WHERE C_IdPersona = @IdPersonaInt)
+    BEGIN
+        -- Lo marcamos como 0 para que Node.js proceda a registrarlo formalmente como Cliente
+        SET @Existe = 0; 
+    END
+    
+    SELECT @Existe AS existe;
+END;
+GO

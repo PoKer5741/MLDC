@@ -21,7 +21,7 @@ Sistema bancario universitario desarrollado para el curso IF5100. Simula un core
 1. **SQL Server** corriendo localmente con autenticación de Windows
 2. **ODBC Driver 17 for SQL Server** instalado
 3. **Node.js** v18 o superior
-4. La base de datos `Grupo3_IF51002026_MiRespaldo` creada y poblada con el schema del proyecto
+4. La base de datos `Grupo3_IF51002026` creada y poblada con el schema del proyecto
 5. Los scripts SQL ejecutados en SSMS (ver sección Scripts SQL)
 
 ---

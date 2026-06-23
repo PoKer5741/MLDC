@@ -26,6 +26,7 @@ const PORT = 3000;
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
  
+// BÚSQUEDA INTELIGENTE DE CLIENTES / PADRÓN
 app.get('/api/buscar', async (req, res) => {
     const termino   = String(req.query.termino  || '').trim();
     const origen    = String(req.query.origen   || 'padron').trim();
@@ -46,7 +47,7 @@ app.get('/api/buscar', async (req, res) => {
             return res.json(result.recordset);
         }
  
-        if (termino.length < 2 && !provincia && !canton && !distrito) {
+        if (termino.length < 1 && !provincia && !canton && !distrito) {
             return res.json([]);
         }
  
@@ -55,10 +56,11 @@ app.get('/api/buscar', async (req, res) => {
  
     } catch (err) {
         console.error('[BUSCAR ERROR]', err.message);
-        res.status(500).json({ error: `Fallo en busqueda: ${err.message}` });
+        res.status(500).json({ error: `Fallo en búsqueda: ${err.message}` });
     }
 });
  
+// RUTAS GEOGRÁFICAS (MÓDULO DE ADAPTACIÓN REGIONAL COSTA RICA)
 app.get('/api/geo/provincias', async (req, res) => {
     try {
         const provinces = await obtenerProvincias();
@@ -70,6 +72,7 @@ app.get('/api/geo/provincias', async (req, res) => {
  
 app.get('/api/geo/cantones/:idProvincia', async (req, res) => {
     try {
+        if (!req.params.idProvincia) return res.status(400).json({ error: "Falta ID de Provincia" });
         const cantons = await obtenerCantones(req.params.idProvincia);
         res.json(cantons);
     } catch (err) {
@@ -79,6 +82,7 @@ app.get('/api/geo/cantones/:idProvincia', async (req, res) => {
  
 app.get('/api/geo/distritos/:idCanton', async (req, res) => {
     try {
+        if (!req.params.idCanton) return res.status(400).json({ error: "Falta ID de Cantón" });
         const districts = await obtenerDistritos(req.params.idCanton);
         res.json(districts);
     } catch (err) {
@@ -86,10 +90,11 @@ app.get('/api/geo/distritos/:idCanton', async (req, res) => {
     }
 });
  
+// MOTOR DE EVALUACIÓN DE RIESGOS NORMADOS
 app.post('/api/procesar-riesgo', async (req, res) => {
     try {
         await procesarRiesgo();
-        res.json({ mensaje: 'Calificacion masiva parametrica asentada en T_Calculo_Riesgo.' });
+        res.json({ mensaje: 'Calificación masiva paramétrica asentada en T_Calculo_Riesgo.' });
     } catch (error) {
         res.status(500).json({ mensaje: error.message });
     }
@@ -98,26 +103,31 @@ app.post('/api/procesar-riesgo', async (req, res) => {
 app.post('/api/clientes/:idCliente/calcular-riesgo', calcularRiesgoClienteIndividual);
 app.post('/api/clientes/:idCliente/riesgo-manual', guardarRiesgoManualCliente);
  
+// COMPILADOR COMPLIANCE XML - SUGEF / SICVECA
 app.post('/api/generar-xml', async (req, res) => {
     try {
         const xmlData = await XMLModulo.generarXMLSicveca();
-        res.json({ mensaje: 'Archivo Sicveca_Reporte.xml compilado de forma jerarquica.', xml: xmlData });
+        res.json({ mensaje: 'Archivo Sicveca_Reporte.xml compilado de forma jerárquica.', xml: xmlData });
     } catch (error) {
         res.status(500).json({ mensaje: error.message });
     }
 });
 
-app.post('/api/escenarios/4', ejecutarEscenario4);
-
+// HISTORIAL Y RESUMEN DE COMISIONES (SOLUCIÓN AL QUERY QUEMADO)
 app.post('/api/comisiones/historial', async (req, res) => {
     try {
         const pool = await poolPromise;
         const { tipoId, tipoNombre, cantidad, monto } = req.body;
+        
+        const idTipoComisionParsed = parseInt(tipoId) || 0;
+        const cantidadParsed = parseInt(cantidad) || 0;
+        const montoParsed = parseFloat(monto) || 0.0;
+
         await pool.request()
-            .input('C_IdTipoComision', sql.Int,          parseInt(tipoId))
-            .input('D_TipoComision',   sql.VarChar(100),  tipoNombre)
-            .input('N_Cantidad',       sql.Int,          parseInt(cantidad))
-            .input('M_Monto',          sql.Decimal(22,2), parseFloat(monto))
+            .input('C_IdTipoComision', sql.Int,          idTipoComisionParsed)
+            .input('D_TipoComision',   sql.VarChar(100),  tipoNombre || 'Otro')
+            .input('N_Cantidad',       sql.Int,          cantidadParsed)
+            .input('M_Monto',          sql.Decimal(22,2), montoParsed)
             .execute('dbo.sp_RegistrarHistorialComision');
         res.json({ ok: true });
     } catch (err) {
@@ -138,31 +148,51 @@ app.get('/api/comisiones/historial', async (req, res) => {
     }
 });
 
+// Arreglado: Eliminado el SQL crudo (Query quemado) y unificado al Stored Procedure lógico de control histórico
 app.get('/api/comisiones/resumen', async (req, res) => {
     try {
         const pool = await poolPromise;
-        const result = await pool.request().query(`
-            SELECT
-                C_IdTipoComision,
-                CASE C_IdTipoComision
-                    WHEN 1 THEN 'Comision Retiro ATM'
-                    WHEN 2 THEN 'Comision SINPE'
-                    WHEN 3 THEN 'Tarifa Red SWIFT'
-                    ELSE 'Otro'
-                END AS TipoComision,
-                COUNT(*)       AS CantidadTransacciones,
-                SUM(M_Monto)   AS TotalRecaudado
-            FROM T_Comision
-            GROUP BY C_IdTipoComision
-            ORDER BY C_IdTipoComision
-        `);
-        const total = result.recordset.reduce((acc, r) => acc + parseFloat(r.TotalRecaudado), 0);
-        res.json({ detalle: result.recordset, totalGeneral: total });
+        // Invocamos el SP oficial que ya agrupa y totaliza de forma segura en la BD
+        const result = await pool.request().execute('dbo.sp_ObtenerHistorialComisiones');
+        
+        // Mapeamos el recordset del resumen diario o el desglose para entregar la estructura esperada por tu UI
+        const desgloseComisiones = result.recordsets[0] || [];
+        
+        // Nombres homologados según tu regla de negocio de comisiones bancarias
+        const mapeoNombres = { 1: 'Comisión Retiro ATM', 2: 'Comisión SINPE', 3: 'Tarifa Red SWIFT' };
+        
+        // Agrupamos dinámicamente en memoria el consolidado final usando los datos tipados del SP
+        const agrupado = {};
+        let totalGeneral = 0;
+
+        desgloseComisiones.forEach(row => {
+            const id = row.C_IdTipoComision || 0;
+            const m = parseFloat(row.M_Monto || 0);
+            const q = parseInt(row.N_Cantidad || row.CantidadTransacciones || 1);
+            
+            if (!agrupado[id]) {
+                agrupado[id] = {
+                    C_IdTipoComision: id,
+                    TipoComision: mapeoNombres[id] || row.D_TipoComision || 'Otro',
+                    CantidadTransacciones: 0,
+                    TotalRecaudado: 0
+                };
+            }
+            agrupado[id].CantidadTransacciones += q;
+            agrupado[id].TotalRecaudado += m;
+            totalGeneral += m;
+        });
+
+        res.json({ 
+            detalle: Object.values(agrupado), 
+            totalGeneral: totalGeneral 
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
+// ENDPOINTS DEL CORE BANCARIO (PRODUCTOS, PERSONAS Y TRANSACCIONES - CRUD)
 app.get('/api/productos', leerTodosProductos);
 app.get('/api/transacciones', leerTodasTransacciones);
 
@@ -179,8 +209,8 @@ app.post('/api/tipos-productos', async (req, res) => {
         const pool = await poolPromise;
         const { idProducto, nombre } = req.body;
         await pool.request()
-            .input('IdProducto', sql.Int, parseInt(idProducto))
-            .input('Nombre',     sql.VarChar(200), nombre)
+            .input('IdProducto', sql.Int, parseInt(idProducto) || 0)
+            .input('Nombre',     sql.VarChar(200), nombre || '')
             .execute('dbo.sp_InsertarTipoProducto');
         res.json({ mensaje: 'Tipo de producto registrado.' });
     } catch (err) { res.status(500).json({ error: err.message }); }
@@ -191,8 +221,8 @@ app.put('/api/tipos-productos/:id', async (req, res) => {
         const pool = await poolPromise;
         const { nombre } = req.body;
         await pool.request()
-            .input('IdProducto', sql.Int, parseInt(req.params.id))
-            .input('Nombre',     sql.VarChar(200), nombre)
+            .input('IdProducto', sql.Int, parseInt(req.params.id) || 0)
+            .input('Nombre',     sql.VarChar(200), nombre || '')
             .execute('dbo.sp_ActualizarTipoProducto');
         res.json({ mensaje: 'Tipo de producto actualizado.' });
     } catch (err) { res.status(500).json({ error: err.message }); }
@@ -202,7 +232,7 @@ app.delete('/api/tipos-productos/:id', async (req, res) => {
     try {
         const pool = await poolPromise;
         await pool.request()
-            .input('IdProducto', sql.Int, parseInt(req.params.id))
+            .input('IdProducto', sql.Int, parseInt(req.params.id) || 0)
             .execute('dbo.sp_EliminarTipoProducto');
         res.json({ mensaje: 'Tipo de producto eliminado.' });
     } catch (err) { res.status(500).json({ error: err.message }); }
@@ -226,7 +256,7 @@ app.get('/api/perfil-simulado/:id', async (req, res) => {
     try {
         const pool = await poolPromise;
         const result = await pool.request()
-            .input('C_IdPersona', sql.Int, parseInt(req.params.id))
+            .input('C_IdPersona', sql.Int, parseInt(req.params.id) || 0)
             .execute('dbo.sp_ObtenerPerfilClienteSimulado');
         res.json(result.recordset);
     } catch (err) {
@@ -239,9 +269,12 @@ app.put('/api/personas/:id', actualizarPersona);
 app.delete('/api/personas/:id', eliminarPersona);  
 app.post('/api/clientes/:id/visita', registrarVisita);
  
+// CAPA DE SIMULACIÓN Y ESCENARIOS DINÁMICOS
 app.post('/api/escenarios/1', ejecutarEscenario1);
 app.post('/api/escenarios/2', ejecutarEscenario2);
+app.post('/api/escenarios/4', ejecutarEscenario4);
  
+// INICIALIZACIÓN DEL SERVIDOR
 app.listen(PORT, () => {
     console.log(`MLDC CORE OPERATIVO EN INSTANCIA POKER [PORT ${PORT}]`);
     console.log(`Panel Universitario: http://localhost:${PORT}`);

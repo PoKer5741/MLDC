@@ -1,0 +1,1650 @@
+USE [Grupo3_IF51002026]
+GO
+/****** Objeto: Table [dbo].[T_Transaccion] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Transaccion](
+	[Id_Transaccion] [int] NOT NULL,
+	[Id_Producto] [int] NOT NULL,
+	[C_IdTipoTransaccion] [int] NOT NULL,
+	[C_IdCategoriaTransaccion] [int] NULL,
+	[C_IdMoneda] [int] NOT NULL,
+	[F_FechaTransaccion] [datetime] NOT NULL,
+	[M_Monto] [numeric](22, 2) NOT NULL,
+	[M_SaldoDespues] [numeric](22, 2) NOT NULL,
+	[D_Descripcion] [varchar](255) NULL,
+	[D_Referencia] [varchar](100) NULL,
+	[Id_Registro] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Transaccion] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: UserDefinedFunction [dbo].[fn_ObtenerTransaccionesProducto] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+-- Función para leer el historial de transacciones de un producto específico
+CREATE FUNCTION [dbo].[fn_ObtenerTransaccionesProducto] (@Id_Producto VARCHAR(50))
+RETURNS TABLE
+AS
+RETURN (
+    SELECT Id_Transaccion, M_Monto, F_FechaTransaccion, C_IdTipoTransaccion
+    FROM T_Transaccion
+    WHERE Id_Producto = @Id_Producto
+);
+GO
+/****** Objeto: Table [dbo].[T_Persona] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Persona](
+	[C_IdPersona] [int] NOT NULL,
+	[C_IdTipoPersona] [int] NOT NULL,
+	[Id_Padron] [int] NULL,
+	[D_Nombre] [varchar](200) NOT NULL,
+	[D_SegundoNombre] [varchar](50) NULL,
+	[D_PrimerApellido] [varchar](50) NULL,
+	[D_SegundoApellido] [varchar](50) NULL,
+	[F_FechaNacimiento] [date] NULL,
+	[C_IdGenero] [int] NULL,
+	[C_IdProfesion] [int] NULL,
+	[C_IdEstadoCivil] [int] NULL,
+	[C_IdEstado] [int] NULL,
+	[C_IdEstadoJuridico] [int] NULL,
+	[C_IdPais] [int] NULL,
+	[C_IdPaisNacimiento] [int] NULL,
+	[F_FechaRegistro] [datetime] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdPersona] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: UserDefinedFunction [dbo].[fn_LeerPersona] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE FUNCTION [dbo].[fn_LeerPersona] (@C_IdPersona INT)
+RETURNS TABLE
+AS
+RETURN (
+    SELECT 
+        C_IdPersona, 
+        C_IdTipoPersona, 
+        Id_Padron, 
+        D_Nombre, 
+        D_PrimerApellido, 
+        D_SegundoApellido, 
+        F_FechaRegistro
+    FROM dbo.T_Persona WITH (NOLOCK)
+    WHERE C_IdPersona = @C_IdPersona
+);
+GO
+/****** Objeto: Table [dbo].[T_Producto] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Producto](
+	[Id_Producto] [int] NOT NULL,
+	[Id_Cliente] [int] NOT NULL,
+	[C_TipoProducto] [int] NOT NULL,
+	[C_IdMoneda] [int] NOT NULL,
+	[D_NumeroProducto] [varchar](50) NOT NULL,
+	[F_FechaApertura] [datetime] NOT NULL,
+	[F_FechaVencimiento] [datetime] NULL,
+	[F_FechaCierre] [datetime] NULL,
+	[M_Saldo] [numeric](22, 2) NOT NULL,
+	[M_LimiteCredito] [numeric](22, 2) NULL,
+	[M_TasaInteres] [numeric](5, 2) NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Producto] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+ CONSTRAINT [UQ_Producto_Numero] UNIQUE NONCLUSTERED 
+(
+	[D_NumeroProducto] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: UserDefinedFunction [dbo].[fn_ObtenerProductosCliente] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE FUNCTION [dbo].[fn_ObtenerProductosCliente] (@C_IdPersona INT)
+RETURNS TABLE
+AS
+RETURN (
+    SELECT 
+        Id_Producto,
+        Id_Cliente,
+        C_TipoProducto,
+        D_NumeroProducto,
+        M_Saldo,
+        F_FechaApertura
+    FROM dbo.T_Producto WITH (NOLOCK)
+    WHERE Id_Cliente = @C_IdPersona
+      AND N_Estado = 2
+);
+GO
+/****** Objeto: UserDefinedFunction [dbo].[fn_LeerProductosCliente] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE FUNCTION [dbo].[fn_LeerProductosCliente] (@C_IdPersona INT)
+RETURNS TABLE
+AS
+RETURN (
+    SELECT 
+        Id_Producto,
+        Id_Cliente,
+        C_TipoProducto,
+        C_IdMoneda,
+        D_NumeroProducto,
+        F_FechaApertura,
+        F_FechaVencimiento,
+        F_FechaCierre,
+        M_Saldo,
+        M_LimiteCredito,
+        M_TasaInteres,
+        N_Estado
+    FROM T_Producto
+    WHERE Id_Cliente = @C_IdPersona
+);
+GO
+/****** Objeto: Table [dbo].[T_Tipo_Producto_Servicio_Legitimacion] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Tipo_Producto_Servicio_Legitimacion](
+	[Id_Tipo_Producto_Servicio_Legitimacion] [int] NOT NULL,
+	[D_Descripcion] [varchar](100) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Tipo_Producto_Servicio_Legitimacion] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: UserDefinedFunction [dbo].[fn_ObtenerTiposProductos] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE FUNCTION [dbo].[fn_ObtenerTiposProductos] ()
+RETURNS TABLE
+AS
+RETURN (
+    SELECT 
+        Id_Tipo_Producto_Servicio_Legitimacion AS IdProducto, 
+        D_Descripcion AS Nombre
+    FROM T_Tipo_Producto_Servicio_Legitimacion 
+    WHERE N_Estado = 1
+);
+GO
+/****** Objeto: Table [dbo].[T_CategoriaTransaccion] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_CategoriaTransaccion](
+	[C_IdCategoriaTransaccion] [int] NOT NULL,
+	[D_Descripcion] [varchar](100) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdCategoriaTransaccion] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: UserDefinedFunction [dbo].[fn_ObtenerCategoriasTransaccion] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE FUNCTION [dbo].[fn_ObtenerCategoriasTransaccion] ()
+RETURNS TABLE
+AS
+RETURN (
+    SELECT 
+        C_IdCategoriaTransaccion AS IdCategoria, 
+        D_Descripcion AS Nombre
+    FROM T_CategoriaTransaccion 
+    WHERE N_Estado = 1
+);
+GO
+/****** Objeto: Table [dbo].[T_ActividadEconomica] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_ActividadEconomica](
+	[C_IdActividad] [varchar](20) NOT NULL,
+	[D_Descripcion] [varchar](255) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdActividad] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Bloque_Geografia] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Bloque_Geografia](
+	[Id_Bloque_Geografia] [int] NOT NULL,
+	[Id_Registro] [int] NOT NULL,
+	[N_Mes] [numeric](2, 0) NOT NULL,
+	[Id_Provincia] [int] NOT NULL,
+	[Id_Canton] [int] NOT NULL,
+	[Id_Distrito] [int] NOT NULL,
+	[Q_CantidadClientes] [int] NOT NULL,
+	[M_OperacionesActivas] [numeric](22, 2) NOT NULL,
+	[M_OperacionesPasivas] [numeric](22, 2) NOT NULL,
+	[M_OperacionesFueraBalance] [numeric](22, 2) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Bloque_Geografia] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Calculo_Riesgo] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Calculo_Riesgo](
+	[Id_Calculo_Riesgo] [int] NOT NULL,
+	[Id_Cliente] [int] NOT NULL,
+	[C_IdTipoPersona] [int] NOT NULL,
+	[N_PuntajeTotal] [numeric](5, 2) NOT NULL,
+	[C_TipoRiesgo] [int] NOT NULL,
+	[F_FechaCalculo] [datetime] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Calculo_Riesgo] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Canales_Distribucion] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Canales_Distribucion](
+	[Id_Canales_Distribucion] [int] NOT NULL,
+	[Id_Registro] [int] NOT NULL,
+	[N_Mes] [numeric](2, 0) NOT NULL,
+	[C_TipoRiesgo] [int] NOT NULL,
+	[C_TipoDependencia] [int] NOT NULL,
+	[C_TipoEntradaSalidaFondos] [int] NOT NULL,
+	[Q_CantidadOperaciones] [numeric](8, 0) NOT NULL,
+	[Q_NumeroClientes] [numeric](8, 0) NOT NULL,
+	[M_Monto] [numeric](22, 2) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Canales_Distribucion] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Canton] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Canton](
+	[Id_Canton] [int] NOT NULL,
+	[Id_Provincia] [int] NOT NULL,
+	[D_NombreCanton] [varchar](100) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Canton] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Carga_Padron] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Carga_Padron](
+	[Id_Carga_Padron] [int] NOT NULL,
+	[F_FechaCarga] [datetime] NOT NULL,
+	[D_NombreArchivo] [varchar](255) NOT NULL,
+	[Q_RegistrosCargados] [int] NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Carga_Padron] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Cliente] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Cliente](
+	[Id_Cliente] [int] NOT NULL,
+	[C_IdPersona] [int] NOT NULL,
+	[F_FechaRegistro] [datetime] NOT NULL,
+	[Q_FrecuenciaConsulta] [int] NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Cliente] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+ CONSTRAINT [UQ_Cliente_Persona] UNIQUE NONCLUSTERED 
+(
+	[C_IdPersona] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Clientes_Categoria_Riesgo] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Clientes_Categoria_Riesgo](
+	[Id_Clientes_Categoria_Riesgo] [int] NOT NULL,
+	[Id_Registro] [int] NOT NULL,
+	[N_Mes] [numeric](2, 0) NOT NULL,
+	[C_TipoRiesgo] [int] NOT NULL,
+	[Q_NumeroClientes] [numeric](8, 0) NOT NULL,
+	[M_PorcentajeClientes] [numeric](5, 2) NOT NULL,
+	[M_SaldoOperaciones] [numeric](22, 2) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Clientes_Categoria_Riesgo] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Clientes_Riesgo_Alto] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Clientes_Riesgo_Alto](
+	[Id_Clientes_Riesgo_Alto] [int] NOT NULL,
+	[Id_Registro] [int] NOT NULL,
+	[N_Mes] [numeric](2, 0) NOT NULL,
+	[T_TipoPersona] [varchar](1) NOT NULL,
+	[D_CategoriaRiesgoAlto] [varchar](50) NOT NULL,
+	[Q_NumeroClientes] [numeric](8, 0) NOT NULL,
+	[M_PorcentajeClientes] [numeric](5, 2) NOT NULL,
+	[M_SaldoOperaciones] [numeric](22, 2) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Clientes_Riesgo_Alto] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Comision] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Comision](
+	[Id_Comision] [int] NOT NULL,
+	[Id_Transaccion] [int] NULL,
+	[Id_Cliente] [int] NOT NULL,
+	[C_IdTipoComision] [int] NOT NULL,
+	[C_IdMoneda] [int] NOT NULL,
+	[M_Monto] [numeric](22, 2) NOT NULL,
+	[F_FechaComision] [datetime] NOT NULL,
+	[D_Descripcion] [varchar](255) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Comision] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Distrito] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Distrito](
+	[Id_Distrito] [int] NOT NULL,
+	[Id_Canton] [int] NOT NULL,
+	[D_NombreDistrito] [varchar](100) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Distrito] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_EntidadOtrasPensiones] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_EntidadOtrasPensiones](
+	[C_IdEntidadOtrasPensiones] [int] NOT NULL,
+	[D_IdentificacionEntidad] [varchar](50) NOT NULL,
+	[D_Descripcion] [varchar](200) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdEntidadOtrasPensiones] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_EntidadPensiones] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_EntidadPensiones](
+	[C_IdEntidadPensiones] [int] NOT NULL,
+	[D_IdentificacionEntidad] [varchar](50) NOT NULL,
+	[D_Descripcion] [varchar](200) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdEntidadPensiones] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_EstadoCivil] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_EstadoCivil](
+	[C_IdEstadoCivil] [int] NOT NULL,
+	[D_Descripcion] [varchar](50) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdEstadoCivil] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_EstadoPersona] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_EstadoPersona](
+	[C_IdEstado] [int] NOT NULL,
+	[D_Descripcion] [varchar](100) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdEstado] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_EstadoPersonaJuridica] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_EstadoPersonaJuridica](
+	[C_IdEstado] [int] NOT NULL,
+	[D_Descripcion] [varchar](100) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdEstado] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_EventoExtraordinario] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_EventoExtraordinario](
+	[C_IdEventoExtraordinario] [int] NOT NULL,
+	[D_Descripcion] [varchar](100) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdEventoExtraordinario] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Generacion_XML] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Generacion_XML](
+	[Id_Generacion_XML] [int] NOT NULL,
+	[Id_Registro] [int] NOT NULL,
+	[F_FechaGeneracion] [datetime] NOT NULL,
+	[N_Anio] [numeric](4, 0) NOT NULL,
+	[N_Mes] [numeric](2, 0) NOT NULL,
+	[D_NombreArchivo] [varchar](255) NOT NULL,
+	[N_Valido] [int] NOT NULL,
+	[D_ResultadoValidacion] [varchar](max) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Generacion_XML] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Genero] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Genero](
+	[C_IdGenero] [int] NOT NULL,
+	[D_Descripcion] [varchar](20) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdGenero] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Historial_Comisiones] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Historial_Comisiones](
+	[Id_Historial] [int] IDENTITY(1,1) NOT NULL,
+	[F_Fecha] [datetime] NOT NULL,
+	[C_IdTipoComision] [int] NOT NULL,
+	[D_TipoComision] [varchar](100) NOT NULL,
+	[N_Cantidad] [int] NOT NULL,
+	[M_Monto] [decimal](22, 2) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Historial] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Historial_Consultas] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Historial_Consultas](
+	[Id_Historial] [int] IDENTITY(1,1) NOT NULL,
+	[Id_Cliente] [int] NOT NULL,
+	[F_FechaConsulta] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Historial] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Identificacion] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Identificacion](
+	[C_IdIdentificacion] [int] NOT NULL,
+	[C_IdPersona] [int] NOT NULL,
+	[C_IdTipoIdentificacion] [int] NOT NULL,
+	[D_NumeroIdentificacion] [varchar](100) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdIdentificacion] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+ CONSTRAINT [UQ_Identificacion] UNIQUE NONCLUSTERED 
+(
+	[C_IdTipoIdentificacion] ASC,
+	[D_NumeroIdentificacion] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_JustificacionIngreso] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_JustificacionIngreso](
+	[C_IdJustificacionIngreso] [int] NOT NULL,
+	[D_Descripcion] [varchar](100) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdJustificacionIngreso] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_MedioComunicacion] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_MedioComunicacion](
+	[C_IdMedioComunicacion] [int] NOT NULL,
+	[D_Descripcion] [varchar](50) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdMedioComunicacion] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Meses] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Meses](
+	[Id_Mes] [int] NOT NULL,
+	[D_NombreMes] [varchar](20) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Mes] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Moneda] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Moneda](
+	[C_IdMoneda] [int] NOT NULL,
+	[D_Moneda] [varchar](50) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdMoneda] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Monitoreo] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Monitoreo](
+	[Id_Monitoreo] [int] NOT NULL,
+	[Id_Registro] [int] NOT NULL,
+	[N_Mes] [numeric](2, 0) NOT NULL,
+	[Q_CantidadAlertasGeneradas] [numeric](6, 0) NOT NULL,
+	[Q_CantidadAlertasResueltas] [numeric](6, 0) NOT NULL,
+	[Q_CantidadAlertasPendientes] [numeric](6, 0) NOT NULL,
+	[Q_CantidadAlertasEmpleadosDirectivos] [numeric](6, 0) NOT NULL,
+	[Q_CantidadAlertasClientesRiesgoAlto] [numeric](6, 0) NOT NULL,
+	[Q_CantidadAlertasClientesRiesgoModerado] [numeric](6, 0) NOT NULL,
+	[Q_CantidadAlertasGeneradasMonitoreo] [numeric](6, 0) NOT NULL,
+	[Q_CantidadAlertasGeneradasOtrosMedios] [numeric](6, 0) NOT NULL,
+	[Q_CantidadAlertasGeneranROS] [numeric](6, 0) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Monitoreo] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_OperacionCambio] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_OperacionCambio](
+	[Id_OperacionCambio] [int] NOT NULL,
+	[Id_Cliente] [int] NOT NULL,
+	[Id_TipoCambio] [int] NOT NULL,
+	[T_TipoOperacion] [varchar](10) NOT NULL,
+	[M_MontoOrigen] [numeric](22, 2) NOT NULL,
+	[M_MontoDestino] [numeric](22, 2) NOT NULL,
+	[F_FechaOperacion] [datetime] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_OperacionCambio] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Padron] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Padron](
+	[Id_Padron] [int] NOT NULL,
+	[D_Cedula] [varchar](20) NOT NULL,
+	[D_CodigoDistritoTSE] [varchar](10) NOT NULL,
+	[D_FechaVencimientoCed] [varchar](8) NULL,
+	[D_CodigoZona] [varchar](10) NULL,
+	[D_PrimerNombre] [varchar](50) NOT NULL,
+	[D_PrimerApellido] [varchar](50) NOT NULL,
+	[D_SegundoApellido] [varchar](50) NULL,
+	[Id_Carga_Padron] [int] NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Padron] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+ CONSTRAINT [UQ_Padron_Cedula] UNIQUE NONCLUSTERED 
+(
+	[D_Cedula] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Pais] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Pais](
+	[C_IdPais] [int] NOT NULL,
+	[D_CodPaisAlfa2] [varchar](2) NOT NULL,
+	[D_Pais] [varchar](100) NOT NULL,
+	[C_PrefijoTelefono] [varchar](5) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdPais] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_PaisNacimiento] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_PaisNacimiento](
+	[C_IdPaisNacimiento] [int] NOT NULL,
+	[D_Descripcion] [varchar](100) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdPaisNacimiento] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Parametros_Sistema] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Parametros_Sistema](
+	[Id_Parametro] [varchar](50) NOT NULL,
+	[Valor_Numerico] [int] NULL,
+	[Valor_Texto] [varchar](255) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Parametro] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_PersonaEventoExtraordinario] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_PersonaEventoExtraordinario](
+	[C_IdPersonaEvento] [int] NOT NULL,
+	[C_IdPersona] [int] NOT NULL,
+	[C_IdEventoExtraordinario] [int] NOT NULL,
+	[C_IdMoneda] [int] NOT NULL,
+	[M_Monto] [numeric](22, 2) NOT NULL,
+	[F_FechaEvento] [date] NOT NULL,
+	[D_Descripcion] [varchar](255) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdPersonaEvento] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_PersonaIngreso] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_PersonaIngreso](
+	[C_IdPersonaIngreso] [int] NOT NULL,
+	[C_IdPersona] [int] NOT NULL,
+	[C_IdActividad] [varchar](20) NOT NULL,
+	[C_IdTipoIngreso] [int] NOT NULL,
+	[C_IdJustificacionIngreso] [int] NOT NULL,
+	[C_IdMoneda] [int] NOT NULL,
+	[M_Monto] [numeric](22, 2) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdPersonaIngreso] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_PersonaMedioComunicacion] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_PersonaMedioComunicacion](
+	[C_IdPersonaMedio] [int] NOT NULL,
+	[C_IdPersona] [int] NOT NULL,
+	[C_IdMedioComunicacion] [int] NOT NULL,
+	[D_ValorContacto] [varchar](100) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdPersonaMedio] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_PersonaPension] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_PersonaPension](
+	[C_IdPersonaPension] [int] NOT NULL,
+	[C_IdPersona] [int] NOT NULL,
+	[C_IdTipoRegimen] [int] NOT NULL,
+	[C_IdEntidadPensiones] [int] NULL,
+	[C_IdEntidadOtrasPensiones] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdPersonaPension] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_PersonaRelacion] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_PersonaRelacion](
+	[C_IdPersonaRelacion] [int] NOT NULL,
+	[C_IdPersonaOrigen] [int] NOT NULL,
+	[C_IdPersonaDestino] [int] NOT NULL,
+	[C_IdTipoRelacion] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdPersonaRelacion] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_PersonaUbicacion] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_PersonaUbicacion](
+	[C_IdPersonaUbicacion] [int] NOT NULL,
+	[C_IdPersona] [int] NOT NULL,
+	[C_IdTipoUbicacion] [int] NOT NULL,
+	[Id_Provincia] [int] NOT NULL,
+	[Id_Canton] [int] NOT NULL,
+	[Id_Distrito] [int] NOT NULL,
+	[D_DireccionExacta] [varchar](255) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdPersonaUbicacion] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Productos_Servicios] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Productos_Servicios](
+	[Id_Productos_Servicios] [int] NOT NULL,
+	[Id_Registro] [int] NOT NULL,
+	[N_Mes] [numeric](2, 0) NOT NULL,
+	[C_TipoProductoServicio] [int] NOT NULL,
+	[C_TipoRiesgo] [int] NOT NULL,
+	[Q_NumeroClientes] [numeric](8, 0) NOT NULL,
+	[M_PorcentajeClientes] [numeric](5, 2) NOT NULL,
+	[M_SaldoOperaciones] [numeric](22, 2) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Productos_Servicios] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Profesion] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Profesion](
+	[C_IdProfesion] [int] NOT NULL,
+	[D_Profesion] [varchar](100) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdProfesion] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Provincia] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Provincia](
+	[Id_Provincia] [int] NOT NULL,
+	[D_NombreProvincia] [varchar](100) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Provincia] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Registro] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Registro](
+	[Id_Registro] [int] NOT NULL,
+	[T_Accion] [varchar](10) NOT NULL,
+	[N_Anio] [numeric](4, 0) NOT NULL,
+	[F_FechaCreacion] [datetime] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Registro] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Tipo_Dependencia_Legitimacion] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Tipo_Dependencia_Legitimacion](
+	[Id_Tipo_Dependencia_Legitimacion] [int] NOT NULL,
+	[D_Descripcion] [varchar](100) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Tipo_Dependencia_Legitimacion] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Tipo_Entrada_Salida_Fondos_Legitimacion] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Tipo_Entrada_Salida_Fondos_Legitimacion](
+	[Id_Tipo_Entrada_Salida_Fondos_Legitimacion] [int] NOT NULL,
+	[D_Descripcion] [varchar](50) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Tipo_Entrada_Salida_Fondos_Legitimacion] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Tipo_Movimiento_Legitimacion] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Tipo_Movimiento_Legitimacion](
+	[Id_Tipo_Movimiento_Legitimacion] [int] NOT NULL,
+	[D_Descripcion] [varchar](50) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Tipo_Movimiento_Legitimacion] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Tipo_Riesgo_Legitimacion] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Tipo_Riesgo_Legitimacion](
+	[Id_Tipo_Riesgo_Legitimacion] [int] NOT NULL,
+	[D_Descripcion] [varchar](50) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Tipo_Riesgo_Legitimacion] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_TipoCambio] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_TipoCambio](
+	[Id_TipoCambio] [int] NOT NULL,
+	[C_IdMonedaBase] [int] NOT NULL,
+	[C_IdMonedaDest] [int] NOT NULL,
+	[M_TasaCompra] [numeric](18, 6) NOT NULL,
+	[M_TasaVenta] [numeric](18, 6) NOT NULL,
+	[F_FechaVigencia] [datetime] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_TipoCambio] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_TipoComision] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_TipoComision](
+	[C_IdTipoComision] [int] NOT NULL,
+	[D_Descripcion] [varchar](100) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdTipoComision] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_TipoIdentificacion] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_TipoIdentificacion](
+	[C_IdTipoIdentificacion] [int] NOT NULL,
+	[D_TipoIdentificacion] [varchar](50) NOT NULL,
+	[D_Formato] [varchar](100) NOT NULL,
+	[D_ExpresionRegular] [varchar](200) NOT NULL,
+	[Q_LongitudMin] [int] NULL,
+	[Q_LongitudMax] [int] NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdTipoIdentificacion] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_TipoIngreso] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_TipoIngreso](
+	[C_IdTipoIngreso] [int] NOT NULL,
+	[D_Descripcion] [varchar](100) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdTipoIngreso] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_TipoPersona] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_TipoPersona](
+	[C_IdTipoPersona] [int] NOT NULL,
+	[D_TipoPersona] [varchar](20) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdTipoPersona] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_TipoRegimen] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_TipoRegimen](
+	[C_IdTipoRegimen] [int] NOT NULL,
+	[D_Descripcion] [varchar](100) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdTipoRegimen] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_TipoRelacion] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_TipoRelacion](
+	[C_IdTipoRelacion] [int] NOT NULL,
+	[D_Descripcion] [varchar](100) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdTipoRelacion] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_TipoTransaccion] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_TipoTransaccion](
+	[C_IdTipoTransaccion] [int] NOT NULL,
+	[D_Descripcion] [varchar](50) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdTipoTransaccion] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_TipoUbicacion] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_TipoUbicacion](
+	[C_IdTipoUbicacion] [int] NOT NULL,
+	[D_Descripcion] [varchar](50) NOT NULL,
+	[N_Estado] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[C_IdTipoUbicacion] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[T_Transferencias_Remesas] Fecha de script: 22/6/2026 22:00:39 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[T_Transferencias_Remesas](
+	[Id_Transferencias_Remesas] [int] NOT NULL,
+	[Id_Registro] [int] NOT NULL,
+	[N_Mes] [numeric](2, 0) NOT NULL,
+	[C_TipoMovimiento] [int] NOT NULL,
+	[C_TipoEntradaSalidaFondos] [int] NOT NULL,
+	[M_MontoTotal] [numeric](22, 2) NOT NULL,
+	[D_CodigoPaisISO] [varchar](2) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id_Transferencias_Remesas] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[T_Calculo_Riesgo] ADD  DEFAULT (getdate()) FOR [F_FechaCalculo]
+GO
+ALTER TABLE [dbo].[T_Carga_Padron] ADD  DEFAULT (getdate()) FOR [F_FechaCarga]
+GO
+ALTER TABLE [dbo].[T_Cliente] ADD  DEFAULT (getdate()) FOR [F_FechaRegistro]
+GO
+ALTER TABLE [dbo].[T_Cliente] ADD  DEFAULT ((0)) FOR [Q_FrecuenciaConsulta]
+GO
+ALTER TABLE [dbo].[T_Cliente] ADD  DEFAULT ((2)) FOR [N_Estado]
+GO
+ALTER TABLE [dbo].[T_Comision] ADD  DEFAULT (getdate()) FOR [F_FechaComision]
+GO
+ALTER TABLE [dbo].[T_Generacion_XML] ADD  DEFAULT (getdate()) FOR [F_FechaGeneracion]
+GO
+ALTER TABLE [dbo].[T_Historial_Comisiones] ADD  DEFAULT (getdate()) FOR [F_Fecha]
+GO
+ALTER TABLE [dbo].[T_Historial_Consultas] ADD  DEFAULT (getdate()) FOR [F_FechaConsulta]
+GO
+ALTER TABLE [dbo].[T_OperacionCambio] ADD  DEFAULT (getdate()) FOR [F_FechaOperacion]
+GO
+ALTER TABLE [dbo].[T_Persona] ADD  DEFAULT (getdate()) FOR [F_FechaRegistro]
+GO
+ALTER TABLE [dbo].[T_Producto] ADD  DEFAULT (getdate()) FOR [F_FechaApertura]
+GO
+ALTER TABLE [dbo].[T_Producto] ADD  DEFAULT ((0)) FOR [M_Saldo]
+GO
+ALTER TABLE [dbo].[T_Producto] ADD  DEFAULT ((2)) FOR [N_Estado]
+GO
+ALTER TABLE [dbo].[T_Registro] ADD  DEFAULT (getdate()) FOR [F_FechaCreacion]
+GO
+ALTER TABLE [dbo].[T_Transaccion] ADD  DEFAULT (getdate()) FOR [F_FechaTransaccion]
+GO
+ALTER TABLE [dbo].[T_Bloque_Geografia]  WITH CHECK ADD  CONSTRAINT [FK_GEO_Canton] FOREIGN KEY([Id_Canton])
+REFERENCES [dbo].[T_Canton] ([Id_Canton])
+GO
+ALTER TABLE [dbo].[T_Bloque_Geografia] CHECK CONSTRAINT [FK_GEO_Canton]
+GO
+ALTER TABLE [dbo].[T_Bloque_Geografia]  WITH CHECK ADD  CONSTRAINT [FK_GEO_Distrito] FOREIGN KEY([Id_Distrito])
+REFERENCES [dbo].[T_Distrito] ([Id_Distrito])
+GO
+ALTER TABLE [dbo].[T_Bloque_Geografia] CHECK CONSTRAINT [FK_GEO_Distrito]
+GO
+ALTER TABLE [dbo].[T_Bloque_Geografia]  WITH CHECK ADD  CONSTRAINT [FK_GEO_Provincia] FOREIGN KEY([Id_Provincia])
+REFERENCES [dbo].[T_Provincia] ([Id_Provincia])
+GO
+ALTER TABLE [dbo].[T_Bloque_Geografia] CHECK CONSTRAINT [FK_GEO_Provincia]
+GO
+ALTER TABLE [dbo].[T_Bloque_Geografia]  WITH CHECK ADD  CONSTRAINT [FK_GEO_Registro] FOREIGN KEY([Id_Registro])
+REFERENCES [dbo].[T_Registro] ([Id_Registro])
+GO
+ALTER TABLE [dbo].[T_Bloque_Geografia] CHECK CONSTRAINT [FK_GEO_Registro]
+GO
+ALTER TABLE [dbo].[T_Calculo_Riesgo]  WITH CHECK ADD  CONSTRAINT [FK_CR_Cliente] FOREIGN KEY([Id_Cliente])
+REFERENCES [dbo].[T_Cliente] ([Id_Cliente])
+GO
+ALTER TABLE [dbo].[T_Calculo_Riesgo] CHECK CONSTRAINT [FK_CR_Cliente]
+GO
+ALTER TABLE [dbo].[T_Calculo_Riesgo]  WITH CHECK ADD  CONSTRAINT [FK_CR_TipoPersona] FOREIGN KEY([C_IdTipoPersona])
+REFERENCES [dbo].[T_TipoPersona] ([C_IdTipoPersona])
+GO
+ALTER TABLE [dbo].[T_Calculo_Riesgo] CHECK CONSTRAINT [FK_CR_TipoPersona]
+GO
+ALTER TABLE [dbo].[T_Calculo_Riesgo]  WITH CHECK ADD  CONSTRAINT [FK_CR_TipoRiesgo] FOREIGN KEY([C_TipoRiesgo])
+REFERENCES [dbo].[T_Tipo_Riesgo_Legitimacion] ([Id_Tipo_Riesgo_Legitimacion])
+GO
+ALTER TABLE [dbo].[T_Calculo_Riesgo] CHECK CONSTRAINT [FK_CR_TipoRiesgo]
+GO
+ALTER TABLE [dbo].[T_Canales_Distribucion]  WITH CHECK ADD  CONSTRAINT [FK_CD_Registro] FOREIGN KEY([Id_Registro])
+REFERENCES [dbo].[T_Registro] ([Id_Registro])
+GO
+ALTER TABLE [dbo].[T_Canales_Distribucion] CHECK CONSTRAINT [FK_CD_Registro]
+GO
+ALTER TABLE [dbo].[T_Canales_Distribucion]  WITH CHECK ADD  CONSTRAINT [FK_CD_TipoDependencia] FOREIGN KEY([C_TipoDependencia])
+REFERENCES [dbo].[T_Tipo_Dependencia_Legitimacion] ([Id_Tipo_Dependencia_Legitimacion])
+GO
+ALTER TABLE [dbo].[T_Canales_Distribucion] CHECK CONSTRAINT [FK_CD_TipoDependencia]
+GO
+ALTER TABLE [dbo].[T_Canales_Distribucion]  WITH CHECK ADD  CONSTRAINT [FK_CD_TipoEntradaSalida] FOREIGN KEY([C_TipoEntradaSalidaFondos])
+REFERENCES [dbo].[T_Tipo_Entrada_Salida_Fondos_Legitimacion] ([Id_Tipo_Entrada_Salida_Fondos_Legitimacion])
+GO
+ALTER TABLE [dbo].[T_Canales_Distribucion] CHECK CONSTRAINT [FK_CD_TipoEntradaSalida]
+GO
+ALTER TABLE [dbo].[T_Canales_Distribucion]  WITH CHECK ADD  CONSTRAINT [FK_CD_TipoRiesgo] FOREIGN KEY([C_TipoRiesgo])
+REFERENCES [dbo].[T_Tipo_Riesgo_Legitimacion] ([Id_Tipo_Riesgo_Legitimacion])
+GO
+ALTER TABLE [dbo].[T_Canales_Distribucion] CHECK CONSTRAINT [FK_CD_TipoRiesgo]
+GO
+ALTER TABLE [dbo].[T_Canton]  WITH CHECK ADD  CONSTRAINT [FK_Canton_Provincia] FOREIGN KEY([Id_Provincia])
+REFERENCES [dbo].[T_Provincia] ([Id_Provincia])
+GO
+ALTER TABLE [dbo].[T_Canton] CHECK CONSTRAINT [FK_Canton_Provincia]
+GO
+ALTER TABLE [dbo].[T_Cliente]  WITH CHECK ADD  CONSTRAINT [FK_Cliente_Persona] FOREIGN KEY([C_IdPersona])
+REFERENCES [dbo].[T_Persona] ([C_IdPersona])
+GO
+ALTER TABLE [dbo].[T_Cliente] CHECK CONSTRAINT [FK_Cliente_Persona]
+GO
+ALTER TABLE [dbo].[T_Clientes_Categoria_Riesgo]  WITH CHECK ADD  CONSTRAINT [FK_CCR_Registro] FOREIGN KEY([Id_Registro])
+REFERENCES [dbo].[T_Registro] ([Id_Registro])
+GO
+ALTER TABLE [dbo].[T_Clientes_Categoria_Riesgo] CHECK CONSTRAINT [FK_CCR_Registro]
+GO
+ALTER TABLE [dbo].[T_Clientes_Categoria_Riesgo]  WITH CHECK ADD  CONSTRAINT [FK_CCR_TipoRiesgo] FOREIGN KEY([C_TipoRiesgo])
+REFERENCES [dbo].[T_Tipo_Riesgo_Legitimacion] ([Id_Tipo_Riesgo_Legitimacion])
+GO
+ALTER TABLE [dbo].[T_Clientes_Categoria_Riesgo] CHECK CONSTRAINT [FK_CCR_TipoRiesgo]
+GO
+ALTER TABLE [dbo].[T_Clientes_Riesgo_Alto]  WITH CHECK ADD  CONSTRAINT [FK_CRA_Registro] FOREIGN KEY([Id_Registro])
+REFERENCES [dbo].[T_Registro] ([Id_Registro])
+GO
+ALTER TABLE [dbo].[T_Clientes_Riesgo_Alto] CHECK CONSTRAINT [FK_CRA_Registro]
+GO
+ALTER TABLE [dbo].[T_Comision]  WITH CHECK ADD  CONSTRAINT [FK_Comision_Cliente] FOREIGN KEY([Id_Cliente])
+REFERENCES [dbo].[T_Cliente] ([Id_Cliente])
+GO
+ALTER TABLE [dbo].[T_Comision] CHECK CONSTRAINT [FK_Comision_Cliente]
+GO
+ALTER TABLE [dbo].[T_Comision]  WITH CHECK ADD  CONSTRAINT [FK_Comision_Moneda] FOREIGN KEY([C_IdMoneda])
+REFERENCES [dbo].[T_Moneda] ([C_IdMoneda])
+GO
+ALTER TABLE [dbo].[T_Comision] CHECK CONSTRAINT [FK_Comision_Moneda]
+GO
+ALTER TABLE [dbo].[T_Comision]  WITH CHECK ADD  CONSTRAINT [FK_Comision_Tipo] FOREIGN KEY([C_IdTipoComision])
+REFERENCES [dbo].[T_TipoComision] ([C_IdTipoComision])
+GO
+ALTER TABLE [dbo].[T_Comision] CHECK CONSTRAINT [FK_Comision_Tipo]
+GO
+ALTER TABLE [dbo].[T_Comision]  WITH CHECK ADD  CONSTRAINT [FK_Comision_Transaccion] FOREIGN KEY([Id_Transaccion])
+REFERENCES [dbo].[T_Transaccion] ([Id_Transaccion])
+GO
+ALTER TABLE [dbo].[T_Comision] CHECK CONSTRAINT [FK_Comision_Transaccion]
+GO
+ALTER TABLE [dbo].[T_Distrito]  WITH CHECK ADD  CONSTRAINT [FK_Distrito_Canton] FOREIGN KEY([Id_Canton])
+REFERENCES [dbo].[T_Canton] ([Id_Canton])
+GO
+ALTER TABLE [dbo].[T_Distrito] CHECK CONSTRAINT [FK_Distrito_Canton]
+GO
+ALTER TABLE [dbo].[T_Generacion_XML]  WITH CHECK ADD  CONSTRAINT [FK_XML_Registro] FOREIGN KEY([Id_Registro])
+REFERENCES [dbo].[T_Registro] ([Id_Registro])
+GO
+ALTER TABLE [dbo].[T_Generacion_XML] CHECK CONSTRAINT [FK_XML_Registro]
+GO
+ALTER TABLE [dbo].[T_Historial_Consultas]  WITH CHECK ADD  CONSTRAINT [FK_Historial_Cliente] FOREIGN KEY([Id_Cliente])
+REFERENCES [dbo].[T_Cliente] ([Id_Cliente])
+GO
+ALTER TABLE [dbo].[T_Historial_Consultas] CHECK CONSTRAINT [FK_Historial_Cliente]
+GO
+ALTER TABLE [dbo].[T_Identificacion]  WITH CHECK ADD  CONSTRAINT [FK_Identificacion_Persona] FOREIGN KEY([C_IdPersona])
+REFERENCES [dbo].[T_Persona] ([C_IdPersona])
+GO
+ALTER TABLE [dbo].[T_Identificacion] CHECK CONSTRAINT [FK_Identificacion_Persona]
+GO
+ALTER TABLE [dbo].[T_Identificacion]  WITH CHECK ADD  CONSTRAINT [FK_Identificacion_Tipo] FOREIGN KEY([C_IdTipoIdentificacion])
+REFERENCES [dbo].[T_TipoIdentificacion] ([C_IdTipoIdentificacion])
+GO
+ALTER TABLE [dbo].[T_Identificacion] CHECK CONSTRAINT [FK_Identificacion_Tipo]
+GO
+ALTER TABLE [dbo].[T_Monitoreo]  WITH CHECK ADD  CONSTRAINT [FK_MT_Registro] FOREIGN KEY([Id_Registro])
+REFERENCES [dbo].[T_Registro] ([Id_Registro])
+GO
+ALTER TABLE [dbo].[T_Monitoreo] CHECK CONSTRAINT [FK_MT_Registro]
+GO
+ALTER TABLE [dbo].[T_OperacionCambio]  WITH CHECK ADD  CONSTRAINT [FK_OC_Cliente] FOREIGN KEY([Id_Cliente])
+REFERENCES [dbo].[T_Cliente] ([Id_Cliente])
+GO
+ALTER TABLE [dbo].[T_OperacionCambio] CHECK CONSTRAINT [FK_OC_Cliente]
+GO
+ALTER TABLE [dbo].[T_OperacionCambio]  WITH CHECK ADD  CONSTRAINT [FK_OC_TipoCambio] FOREIGN KEY([Id_TipoCambio])
+REFERENCES [dbo].[T_TipoCambio] ([Id_TipoCambio])
+GO
+ALTER TABLE [dbo].[T_OperacionCambio] CHECK CONSTRAINT [FK_OC_TipoCambio]
+GO
+ALTER TABLE [dbo].[T_Padron]  WITH CHECK ADD  CONSTRAINT [FK_Padron_Carga] FOREIGN KEY([Id_Carga_Padron])
+REFERENCES [dbo].[T_Carga_Padron] ([Id_Carga_Padron])
+GO
+ALTER TABLE [dbo].[T_Padron] CHECK CONSTRAINT [FK_Padron_Carga]
+GO
+ALTER TABLE [dbo].[T_Persona]  WITH CHECK ADD  CONSTRAINT [FK_Persona_Estado] FOREIGN KEY([C_IdEstado])
+REFERENCES [dbo].[T_EstadoPersona] ([C_IdEstado])
+GO
+ALTER TABLE [dbo].[T_Persona] CHECK CONSTRAINT [FK_Persona_Estado]
+GO
+ALTER TABLE [dbo].[T_Persona]  WITH CHECK ADD  CONSTRAINT [FK_Persona_EstadoCivil] FOREIGN KEY([C_IdEstadoCivil])
+REFERENCES [dbo].[T_EstadoCivil] ([C_IdEstadoCivil])
+GO
+ALTER TABLE [dbo].[T_Persona] CHECK CONSTRAINT [FK_Persona_EstadoCivil]
+GO
+ALTER TABLE [dbo].[T_Persona]  WITH CHECK ADD  CONSTRAINT [FK_Persona_EstadoJuridico] FOREIGN KEY([C_IdEstadoJuridico])
+REFERENCES [dbo].[T_EstadoPersonaJuridica] ([C_IdEstado])
+GO
+ALTER TABLE [dbo].[T_Persona] CHECK CONSTRAINT [FK_Persona_EstadoJuridico]
+GO
+ALTER TABLE [dbo].[T_Persona]  WITH CHECK ADD  CONSTRAINT [FK_Persona_Genero] FOREIGN KEY([C_IdGenero])
+REFERENCES [dbo].[T_Genero] ([C_IdGenero])
+GO
+ALTER TABLE [dbo].[T_Persona] CHECK CONSTRAINT [FK_Persona_Genero]
+GO
+ALTER TABLE [dbo].[T_Persona]  WITH CHECK ADD  CONSTRAINT [FK_Persona_Padron] FOREIGN KEY([Id_Padron])
+REFERENCES [dbo].[T_Padron] ([Id_Padron])
+GO
+ALTER TABLE [dbo].[T_Persona] CHECK CONSTRAINT [FK_Persona_Padron]
+GO
+ALTER TABLE [dbo].[T_Persona]  WITH CHECK ADD  CONSTRAINT [FK_Persona_Pais] FOREIGN KEY([C_IdPais])
+REFERENCES [dbo].[T_Pais] ([C_IdPais])
+GO
+ALTER TABLE [dbo].[T_Persona] CHECK CONSTRAINT [FK_Persona_Pais]
+GO
+ALTER TABLE [dbo].[T_Persona]  WITH CHECK ADD  CONSTRAINT [FK_Persona_PaisNacimiento] FOREIGN KEY([C_IdPaisNacimiento])
+REFERENCES [dbo].[T_PaisNacimiento] ([C_IdPaisNacimiento])
+GO
+ALTER TABLE [dbo].[T_Persona] CHECK CONSTRAINT [FK_Persona_PaisNacimiento]
+GO
+ALTER TABLE [dbo].[T_Persona]  WITH CHECK ADD  CONSTRAINT [FK_Persona_Profesion] FOREIGN KEY([C_IdProfesion])
+REFERENCES [dbo].[T_Profesion] ([C_IdProfesion])
+GO
+ALTER TABLE [dbo].[T_Persona] CHECK CONSTRAINT [FK_Persona_Profesion]
+GO
+ALTER TABLE [dbo].[T_Persona]  WITH CHECK ADD  CONSTRAINT [FK_Persona_TipoPersona] FOREIGN KEY([C_IdTipoPersona])
+REFERENCES [dbo].[T_TipoPersona] ([C_IdTipoPersona])
+GO
+ALTER TABLE [dbo].[T_Persona] CHECK CONSTRAINT [FK_Persona_TipoPersona]
+GO
+ALTER TABLE [dbo].[T_PersonaEventoExtraordinario]  WITH CHECK ADD  CONSTRAINT [FK_PEE_Evento] FOREIGN KEY([C_IdEventoExtraordinario])
+REFERENCES [dbo].[T_EventoExtraordinario] ([C_IdEventoExtraordinario])
+GO
+ALTER TABLE [dbo].[T_PersonaEventoExtraordinario] CHECK CONSTRAINT [FK_PEE_Evento]
+GO
+ALTER TABLE [dbo].[T_PersonaEventoExtraordinario]  WITH CHECK ADD  CONSTRAINT [FK_PEE_Moneda] FOREIGN KEY([C_IdMoneda])
+REFERENCES [dbo].[T_Moneda] ([C_IdMoneda])
+GO
+ALTER TABLE [dbo].[T_PersonaEventoExtraordinario] CHECK CONSTRAINT [FK_PEE_Moneda]
+GO
+ALTER TABLE [dbo].[T_PersonaEventoExtraordinario]  WITH CHECK ADD  CONSTRAINT [FK_PEE_Persona] FOREIGN KEY([C_IdPersona])
+REFERENCES [dbo].[T_Persona] ([C_IdPersona])
+GO
+ALTER TABLE [dbo].[T_PersonaEventoExtraordinario] CHECK CONSTRAINT [FK_PEE_Persona]
+GO
+ALTER TABLE [dbo].[T_PersonaIngreso]  WITH CHECK ADD  CONSTRAINT [FK_PI_Actividad] FOREIGN KEY([C_IdActividad])
+REFERENCES [dbo].[T_ActividadEconomica] ([C_IdActividad])
+GO
+ALTER TABLE [dbo].[T_PersonaIngreso] CHECK CONSTRAINT [FK_PI_Actividad]
+GO
+ALTER TABLE [dbo].[T_PersonaIngreso]  WITH CHECK ADD  CONSTRAINT [FK_PI_JustificacionIngreso] FOREIGN KEY([C_IdJustificacionIngreso])
+REFERENCES [dbo].[T_JustificacionIngreso] ([C_IdJustificacionIngreso])
+GO
+ALTER TABLE [dbo].[T_PersonaIngreso] CHECK CONSTRAINT [FK_PI_JustificacionIngreso]
+GO
+ALTER TABLE [dbo].[T_PersonaIngreso]  WITH CHECK ADD  CONSTRAINT [FK_PI_Moneda] FOREIGN KEY([C_IdMoneda])
+REFERENCES [dbo].[T_Moneda] ([C_IdMoneda])
+GO
+ALTER TABLE [dbo].[T_PersonaIngreso] CHECK CONSTRAINT [FK_PI_Moneda]
+GO
+ALTER TABLE [dbo].[T_PersonaIngreso]  WITH CHECK ADD  CONSTRAINT [FK_PI_Persona] FOREIGN KEY([C_IdPersona])
+REFERENCES [dbo].[T_Persona] ([C_IdPersona])
+GO
+ALTER TABLE [dbo].[T_PersonaIngreso] CHECK CONSTRAINT [FK_PI_Persona]
+GO
+ALTER TABLE [dbo].[T_PersonaIngreso]  WITH CHECK ADD  CONSTRAINT [FK_PI_TipoIngreso] FOREIGN KEY([C_IdTipoIngreso])
+REFERENCES [dbo].[T_TipoIngreso] ([C_IdTipoIngreso])
+GO
+ALTER TABLE [dbo].[T_PersonaIngreso] CHECK CONSTRAINT [FK_PI_TipoIngreso]
+GO
+ALTER TABLE [dbo].[T_PersonaMedioComunicacion]  WITH CHECK ADD  CONSTRAINT [FK_PMC_Medio] FOREIGN KEY([C_IdMedioComunicacion])
+REFERENCES [dbo].[T_MedioComunicacion] ([C_IdMedioComunicacion])
+GO
+ALTER TABLE [dbo].[T_PersonaMedioComunicacion] CHECK CONSTRAINT [FK_PMC_Medio]
+GO
+ALTER TABLE [dbo].[T_PersonaMedioComunicacion]  WITH CHECK ADD  CONSTRAINT [FK_PMC_Persona] FOREIGN KEY([C_IdPersona])
+REFERENCES [dbo].[T_Persona] ([C_IdPersona])
+GO
+ALTER TABLE [dbo].[T_PersonaMedioComunicacion] CHECK CONSTRAINT [FK_PMC_Persona]
+GO
+ALTER TABLE [dbo].[T_PersonaPension]  WITH CHECK ADD  CONSTRAINT [FK_PP_EntidadPensiones] FOREIGN KEY([C_IdEntidadPensiones])
+REFERENCES [dbo].[T_EntidadPensiones] ([C_IdEntidadPensiones])
+GO
+ALTER TABLE [dbo].[T_PersonaPension] CHECK CONSTRAINT [FK_PP_EntidadPensiones]
+GO
+ALTER TABLE [dbo].[T_PersonaPension]  WITH CHECK ADD  CONSTRAINT [FK_PP_OtrasPensiones] FOREIGN KEY([C_IdEntidadOtrasPensiones])
+REFERENCES [dbo].[T_EntidadOtrasPensiones] ([C_IdEntidadOtrasPensiones])
+GO
+ALTER TABLE [dbo].[T_PersonaPension] CHECK CONSTRAINT [FK_PP_OtrasPensiones]
+GO
+ALTER TABLE [dbo].[T_PersonaPension]  WITH CHECK ADD  CONSTRAINT [FK_PP_Persona] FOREIGN KEY([C_IdPersona])
+REFERENCES [dbo].[T_Persona] ([C_IdPersona])
+GO
+ALTER TABLE [dbo].[T_PersonaPension] CHECK CONSTRAINT [FK_PP_Persona]
+GO
+ALTER TABLE [dbo].[T_PersonaPension]  WITH CHECK ADD  CONSTRAINT [FK_PP_TipoRegimen] FOREIGN KEY([C_IdTipoRegimen])
+REFERENCES [dbo].[T_TipoRegimen] ([C_IdTipoRegimen])
+GO
+ALTER TABLE [dbo].[T_PersonaPension] CHECK CONSTRAINT [FK_PP_TipoRegimen]
+GO
+ALTER TABLE [dbo].[T_PersonaRelacion]  WITH CHECK ADD  CONSTRAINT [FK_PR_PersonaDestino] FOREIGN KEY([C_IdPersonaDestino])
+REFERENCES [dbo].[T_Persona] ([C_IdPersona])
+GO
+ALTER TABLE [dbo].[T_PersonaRelacion] CHECK CONSTRAINT [FK_PR_PersonaDestino]
+GO
+ALTER TABLE [dbo].[T_PersonaRelacion]  WITH CHECK ADD  CONSTRAINT [FK_PR_PersonaOrigen] FOREIGN KEY([C_IdPersonaOrigen])
+REFERENCES [dbo].[T_Persona] ([C_IdPersona])
+GO
+ALTER TABLE [dbo].[T_PersonaRelacion] CHECK CONSTRAINT [FK_PR_PersonaOrigen]
+GO
+ALTER TABLE [dbo].[T_PersonaRelacion]  WITH CHECK ADD  CONSTRAINT [FK_PR_TipoRelacion] FOREIGN KEY([C_IdTipoRelacion])
+REFERENCES [dbo].[T_TipoRelacion] ([C_IdTipoRelacion])
+GO
+ALTER TABLE [dbo].[T_PersonaRelacion] CHECK CONSTRAINT [FK_PR_TipoRelacion]
+GO
+ALTER TABLE [dbo].[T_PersonaUbicacion]  WITH CHECK ADD  CONSTRAINT [FK_PU_Canton] FOREIGN KEY([Id_Canton])
+REFERENCES [dbo].[T_Canton] ([Id_Canton])
+GO
+ALTER TABLE [dbo].[T_PersonaUbicacion] CHECK CONSTRAINT [FK_PU_Canton]
+GO
+ALTER TABLE [dbo].[T_PersonaUbicacion]  WITH CHECK ADD  CONSTRAINT [FK_PU_Distrito] FOREIGN KEY([Id_Distrito])
+REFERENCES [dbo].[T_Distrito] ([Id_Distrito])
+GO
+ALTER TABLE [dbo].[T_PersonaUbicacion] CHECK CONSTRAINT [FK_PU_Distrito]
+GO
+ALTER TABLE [dbo].[T_PersonaUbicacion]  WITH CHECK ADD  CONSTRAINT [FK_PU_Persona] FOREIGN KEY([C_IdPersona])
+REFERENCES [dbo].[T_Persona] ([C_IdPersona])
+GO
+ALTER TABLE [dbo].[T_PersonaUbicacion] CHECK CONSTRAINT [FK_PU_Persona]
+GO
+ALTER TABLE [dbo].[T_PersonaUbicacion]  WITH CHECK ADD  CONSTRAINT [FK_PU_Provincia] FOREIGN KEY([Id_Provincia])
+REFERENCES [dbo].[T_Provincia] ([Id_Provincia])
+GO
+ALTER TABLE [dbo].[T_PersonaUbicacion] CHECK CONSTRAINT [FK_PU_Provincia]
+GO
+ALTER TABLE [dbo].[T_PersonaUbicacion]  WITH CHECK ADD  CONSTRAINT [FK_PU_TipoUbic] FOREIGN KEY([C_IdTipoUbicacion])
+REFERENCES [dbo].[T_TipoUbicacion] ([C_IdTipoUbicacion])
+GO
+ALTER TABLE [dbo].[T_PersonaUbicacion] CHECK CONSTRAINT [FK_PU_TipoUbic]
+GO
+ALTER TABLE [dbo].[T_Producto]  WITH CHECK ADD  CONSTRAINT [FK_Producto_Cliente] FOREIGN KEY([Id_Cliente])
+REFERENCES [dbo].[T_Cliente] ([Id_Cliente])
+GO
+ALTER TABLE [dbo].[T_Producto] CHECK CONSTRAINT [FK_Producto_Cliente]
+GO
+ALTER TABLE [dbo].[T_Producto]  WITH CHECK ADD  CONSTRAINT [FK_Producto_Moneda] FOREIGN KEY([C_IdMoneda])
+REFERENCES [dbo].[T_Moneda] ([C_IdMoneda])
+GO
+ALTER TABLE [dbo].[T_Producto] CHECK CONSTRAINT [FK_Producto_Moneda]
+GO
+ALTER TABLE [dbo].[T_Producto]  WITH CHECK ADD  CONSTRAINT [FK_Producto_Tipo] FOREIGN KEY([C_TipoProducto])
+REFERENCES [dbo].[T_Tipo_Producto_Servicio_Legitimacion] ([Id_Tipo_Producto_Servicio_Legitimacion])
+GO
+ALTER TABLE [dbo].[T_Producto] CHECK CONSTRAINT [FK_Producto_Tipo]
+GO
+ALTER TABLE [dbo].[T_Productos_Servicios]  WITH CHECK ADD  CONSTRAINT [FK_PS_Registro] FOREIGN KEY([Id_Registro])
+REFERENCES [dbo].[T_Registro] ([Id_Registro])
+GO
+ALTER TABLE [dbo].[T_Productos_Servicios] CHECK CONSTRAINT [FK_PS_Registro]
+GO
+ALTER TABLE [dbo].[T_Productos_Servicios]  WITH CHECK ADD  CONSTRAINT [FK_PS_TipoProductoServicio] FOREIGN KEY([C_TipoProductoServicio])
+REFERENCES [dbo].[T_Tipo_Producto_Servicio_Legitimacion] ([Id_Tipo_Producto_Servicio_Legitimacion])
+GO
+ALTER TABLE [dbo].[T_Productos_Servicios] CHECK CONSTRAINT [FK_PS_TipoProductoServicio]
+GO
+ALTER TABLE [dbo].[T_Productos_Servicios]  WITH CHECK ADD  CONSTRAINT [FK_PS_TipoRiesgo] FOREIGN KEY([C_TipoRiesgo])
+REFERENCES [dbo].[T_Tipo_Riesgo_Legitimacion] ([Id_Tipo_Riesgo_Legitimacion])
+GO
+ALTER TABLE [dbo].[T_Productos_Servicios] CHECK CONSTRAINT [FK_PS_TipoRiesgo]
+GO
+ALTER TABLE [dbo].[T_TipoCambio]  WITH CHECK ADD  CONSTRAINT [FK_TC_MonedaBase] FOREIGN KEY([C_IdMonedaBase])
+REFERENCES [dbo].[T_Moneda] ([C_IdMoneda])
+GO
+ALTER TABLE [dbo].[T_TipoCambio] CHECK CONSTRAINT [FK_TC_MonedaBase]
+GO
+ALTER TABLE [dbo].[T_TipoCambio]  WITH CHECK ADD  CONSTRAINT [FK_TC_MonedaDest] FOREIGN KEY([C_IdMonedaDest])
+REFERENCES [dbo].[T_Moneda] ([C_IdMoneda])
+GO
+ALTER TABLE [dbo].[T_TipoCambio] CHECK CONSTRAINT [FK_TC_MonedaDest]
+GO
+ALTER TABLE [dbo].[T_Transaccion]  WITH CHECK ADD  CONSTRAINT [FK_Transaccion_Categoria] FOREIGN KEY([C_IdCategoriaTransaccion])
+REFERENCES [dbo].[T_CategoriaTransaccion] ([C_IdCategoriaTransaccion])
+GO
+ALTER TABLE [dbo].[T_Transaccion] CHECK CONSTRAINT [FK_Transaccion_Categoria]
+GO
+ALTER TABLE [dbo].[T_Transaccion]  WITH CHECK ADD  CONSTRAINT [FK_Transaccion_Moneda] FOREIGN KEY([C_IdMoneda])
+REFERENCES [dbo].[T_Moneda] ([C_IdMoneda])
+GO
+ALTER TABLE [dbo].[T_Transaccion] CHECK CONSTRAINT [FK_Transaccion_Moneda]
+GO
+ALTER TABLE [dbo].[T_Transaccion]  WITH CHECK ADD  CONSTRAINT [FK_Transaccion_Producto] FOREIGN KEY([Id_Producto])
+REFERENCES [dbo].[T_Producto] ([Id_Producto])
+GO
+ALTER TABLE [dbo].[T_Transaccion] CHECK CONSTRAINT [FK_Transaccion_Producto]
+GO
+ALTER TABLE [dbo].[T_Transaccion]  WITH CHECK ADD  CONSTRAINT [FK_Transaccion_Registro] FOREIGN KEY([Id_Registro])
+REFERENCES [dbo].[T_Registro] ([Id_Registro])
+GO
+ALTER TABLE [dbo].[T_Transaccion] CHECK CONSTRAINT [FK_Transaccion_Registro]
+GO
+ALTER TABLE [dbo].[T_Transaccion]  WITH CHECK ADD  CONSTRAINT [FK_Transaccion_TipoTrx] FOREIGN KEY([C_IdTipoTransaccion])
+REFERENCES [dbo].[T_TipoTransaccion] ([C_IdTipoTransaccion])
+GO
+ALTER TABLE [dbo].[T_Transaccion] CHECK CONSTRAINT [FK_Transaccion_TipoTrx]
+GO
+ALTER TABLE [dbo].[T_Transferencias_Remesas]  WITH CHECK ADD  CONSTRAINT [FK_TR_Registro] FOREIGN KEY([Id_Registro])
+REFERENCES [dbo].[T_Registro] ([Id_Registro])
+GO
+ALTER TABLE [dbo].[T_Transferencias_Remesas] CHECK CONSTRAINT [FK_TR_Registro]
+GO
+ALTER TABLE [dbo].[T_Transferencias_Remesas]  WITH CHECK ADD  CONSTRAINT [FK_TR_TipoEntradaSalida] FOREIGN KEY([C_TipoEntradaSalidaFondos])
+REFERENCES [dbo].[T_Tipo_Entrada_Salida_Fondos_Legitimacion] ([Id_Tipo_Entrada_Salida_Fondos_Legitimacion])
+GO
+ALTER TABLE [dbo].[T_Transferencias_Remesas] CHECK CONSTRAINT [FK_TR_TipoEntradaSalida]
+GO
+ALTER TABLE [dbo].[T_Transferencias_Remesas]  WITH CHECK ADD  CONSTRAINT [FK_TR_TipoMovimiento] FOREIGN KEY([C_TipoMovimiento])
+REFERENCES [dbo].[T_Tipo_Movimiento_Legitimacion] ([Id_Tipo_Movimiento_Legitimacion])
+GO
+ALTER TABLE [dbo].[T_Transferencias_Remesas] CHECK CONSTRAINT [FK_TR_TipoMovimiento]
+GO
+ALTER TABLE [dbo].[T_Bloque_Geografia]  WITH CHECK ADD  CONSTRAINT [CK_GEO_Mes] CHECK  (([N_Mes]>=(1) AND [N_Mes]<=(12)))
+GO
+ALTER TABLE [dbo].[T_Bloque_Geografia] CHECK CONSTRAINT [CK_GEO_Mes]
+GO
+ALTER TABLE [dbo].[T_Canales_Distribucion]  WITH CHECK ADD  CONSTRAINT [CK_CD_Mes] CHECK  (([N_Mes]>=(1) AND [N_Mes]<=(12)))
+GO
+ALTER TABLE [dbo].[T_Canales_Distribucion] CHECK CONSTRAINT [CK_CD_Mes]
+GO
+ALTER TABLE [dbo].[T_Clientes_Categoria_Riesgo]  WITH CHECK ADD  CONSTRAINT [CK_CCR_Mes] CHECK  (([N_Mes]>=(1) AND [N_Mes]<=(12)))
+GO
+ALTER TABLE [dbo].[T_Clientes_Categoria_Riesgo] CHECK CONSTRAINT [CK_CCR_Mes]
+GO
+ALTER TABLE [dbo].[T_Clientes_Riesgo_Alto]  WITH CHECK ADD  CONSTRAINT [CK_CRA_Mes] CHECK  (([N_Mes]>=(1) AND [N_Mes]<=(12)))
+GO
+ALTER TABLE [dbo].[T_Clientes_Riesgo_Alto] CHECK CONSTRAINT [CK_CRA_Mes]
+GO
+ALTER TABLE [dbo].[T_Clientes_Riesgo_Alto]  WITH CHECK ADD  CONSTRAINT [CK_CRA_Persona] CHECK  (([T_TipoPersona]='J' OR [T_TipoPersona]='F'))
+GO
+ALTER TABLE [dbo].[T_Clientes_Riesgo_Alto] CHECK CONSTRAINT [CK_CRA_Persona]
+GO
+ALTER TABLE [dbo].[T_Comision]  WITH CHECK ADD  CONSTRAINT [CK_Comision_Monto] CHECK  (([M_Monto]>=(0)))
+GO
+ALTER TABLE [dbo].[T_Comision] CHECK CONSTRAINT [CK_Comision_Monto]
+GO
+ALTER TABLE [dbo].[T_Generacion_XML]  WITH CHECK ADD  CONSTRAINT [CK_XML_Mes] CHECK  (([N_Mes]>=(1) AND [N_Mes]<=(12)))
+GO
+ALTER TABLE [dbo].[T_Generacion_XML] CHECK CONSTRAINT [CK_XML_Mes]
+GO
+ALTER TABLE [dbo].[T_Monitoreo]  WITH CHECK ADD  CONSTRAINT [CK_MT_Mes] CHECK  (([N_Mes]>=(1) AND [N_Mes]<=(12)))
+GO
+ALTER TABLE [dbo].[T_Monitoreo] CHECK CONSTRAINT [CK_MT_Mes]
+GO
+ALTER TABLE [dbo].[T_OperacionCambio]  WITH CHECK ADD CHECK  (([T_TipoOperacion]='Venta' OR [T_TipoOperacion]='Compra'))
+GO
+ALTER TABLE [dbo].[T_Productos_Servicios]  WITH CHECK ADD  CONSTRAINT [CK_PS_Mes] CHECK  (([N_Mes]>=(1) AND [N_Mes]<=(12)))
+GO
+ALTER TABLE [dbo].[T_Productos_Servicios] CHECK CONSTRAINT [CK_PS_Mes]
+GO
+ALTER TABLE [dbo].[T_Registro]  WITH CHECK ADD CHECK  (([N_Anio]>(2013)))
+GO
+ALTER TABLE [dbo].[T_Registro]  WITH CHECK ADD CHECK  (([T_Accion]='borrar' OR [T_Accion]='modificar' OR [T_Accion]='insertar'))
+GO
+ALTER TABLE [dbo].[T_Tipo_Entrada_Salida_Fondos_Legitimacion]  WITH CHECK ADD CHECK  (([D_Descripcion]='Salida' OR [D_Descripcion]='Entrada'))
+GO
+ALTER TABLE [dbo].[T_Tipo_Movimiento_Legitimacion]  WITH CHECK ADD CHECK  (([D_Descripcion]='Remesa' OR [D_Descripcion]='Transferencia'))
+GO
+ALTER TABLE [dbo].[T_Tipo_Riesgo_Legitimacion]  WITH CHECK ADD CHECK  (([D_Descripcion]='Bajo' OR [D_Descripcion]='Moderado' OR [D_Descripcion]='Alto'))
+GO
+ALTER TABLE [dbo].[T_TipoCambio]  WITH CHECK ADD  CONSTRAINT [CK_TC_TasasPositivas] CHECK  (([M_TasaCompra]>(0) AND [M_TasaVenta]>(0)))
+GO
+ALTER TABLE [dbo].[T_TipoCambio] CHECK CONSTRAINT [CK_TC_TasasPositivas]
+GO
+ALTER TABLE [dbo].[T_Transaccion]  WITH CHECK ADD  CONSTRAINT [CK_Transaccion_Monto] CHECK  (([M_Monto]>(0)))
+GO
+ALTER TABLE [dbo].[T_Transaccion] CHECK CONSTRAINT [CK_Transaccion_Monto]
+GO
+ALTER TABLE [dbo].[T_Transferencias_Remesas]  WITH CHECK ADD  CONSTRAINT [CK_TR_Mes] CHECK  (([N_Mes]>=(1) AND [N_Mes]<=(12)))
+GO
+ALTER TABLE [dbo].[T_Transferencias_Remesas] CHECK CONSTRAINT [CK_TR_Mes]
+GO
