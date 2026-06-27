@@ -60,7 +60,7 @@ app.get('/api/buscar', async (req, res) => {
     }
 });
  
-// RUTAS GEOGRÁFICAS (MÓDULO DE ADAPTACIÓN REGIONAL COSTA RICA)
+// RUTAS GEOGRÁFICAS  
 app.get('/api/geo/provincias', async (req, res) => {
     try {
         const provinces = await obtenerProvincias();
@@ -152,16 +152,16 @@ app.get('/api/comisiones/historial', async (req, res) => {
 app.get('/api/comisiones/resumen', async (req, res) => {
     try {
         const pool = await poolPromise;
-        // Invocamos el SP oficial que ya agrupa y totaliza de forma segura en la BD
+        //  el SP oficial que ya agrupa y totaliza de forma segura en la BD
         const result = await pool.request().execute('dbo.sp_ObtenerHistorialComisiones');
         
-        // Mapeamos el recordset del resumen diario o el desglose para entregar la estructura esperada por tu UI
+         
         const desgloseComisiones = result.recordsets[0] || [];
         
-        // Nombres homologados según tu regla de negocio de comisiones bancarias
+        
         const mapeoNombres = { 1: 'Comisión Retiro ATM', 2: 'Comisión SINPE', 3: 'Tarifa Red SWIFT' };
         
-        // Agrupamos dinámicamente en memoria el consolidado final usando los datos tipados del SP
+         
         const agrupado = {};
         let totalGeneral = 0;
 
@@ -192,7 +192,7 @@ app.get('/api/comisiones/resumen', async (req, res) => {
     }
 });
 
-// ENDPOINTS DEL CORE BANCARIO (PRODUCTOS, PERSONAS Y TRANSACCIONES - CRUD)
+// ENDPOINTS DEL CORE BANCARIO PRODUCTOS, PERSONAS Y TRANSACCIONES - CRUD
 app.get('/api/productos', leerTodosProductos);
 app.get('/api/transacciones', leerTodasTransacciones);
 

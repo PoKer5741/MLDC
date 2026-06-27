@@ -25,9 +25,9 @@ function getMesesActuales() {
     return meses;
 }
 
-// ==========================================
+// 
 // ESCENARIO 1: Carga Anual de Padrón y Productos
-// ==========================================
+// 
 async function ejecutarEscenario1(req, res) {
     const pool = await poolPromise;
     const meses = getMesesActuales();
@@ -134,9 +134,9 @@ async function ejecutarEscenario1(req, res) {
     }
 }
 
-// ==========================================
+//  
 // ESCENARIO 2: Procesamiento Masivo de Consumos
-// ==========================================
+// 
 async function ejecutarEscenario2(req, res) {
     const pool = await poolPromise;
     const log = [];
@@ -216,9 +216,9 @@ async function ejecutarEscenario2(req, res) {
     }
 }
 
-// ==========================================
+//  
 // ESCENARIO 4: Comisiones y Divisas (Set-Based)
-// ==========================================
+//  
 async function ejecutarEscenario4(req, res) {
     try {
         const pool = await poolPromise;
